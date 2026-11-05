@@ -146,7 +146,7 @@ export async function createTask(req, res) {
           action: 'assigned task',
           entityType: 'task',
           entityId: created.id,
-          details: `Assigned to ${created.assignee.name}`,
+          details: `${created.title}: assigned to ${created.assignee.name}`,
         },
         tx,
       );
@@ -167,11 +167,20 @@ export async function createTask(req, res) {
 
 export async function updateTask(req, res) {
   const task = await loadTask(req.user, parseId(req.params.id));
-  const data = updateTaskSchema.parse(req.body);
+  const submitted = updateTaskSchema.parse(req.body);
+
+  // Only keep fields whose value is different from what is saved.
+  const data = {};
+  for (const [field, value] of Object.entries(submitted)) {
+    const current = task[field];
+    const isSame =
+      value instanceof Date && current instanceof Date ? value.getTime() === current.getTime() : value === current;
+    if (!isSame) data[field] = value;
+  }
   const changedFields = Object.keys(data);
 
   if (changedFields.length === 0) {
-    throw badRequest('No changes were provided.');
+    return res.json({ task: await prisma.task.findUnique({ where: { id: task.id }, include: taskListInclude }) });
   }
 
   const canManage = await canManageTask(req.user, task);
@@ -180,11 +189,11 @@ export async function updateTask(req, res) {
     throw forbidden('You can only update the status of tasks assigned to you.');
   }
 
-  const assigneeChanged = data.assignedTo !== undefined && data.assignedTo !== task.assignedTo;
+  const assigneeChanged = data.assignedTo !== undefined;
   if (assigneeChanged && !(await canAssignTo(req.user, data.assignedTo))) {
     throw forbidden('You can only assign tasks to active members of your team.');
   }
-  const statusChanged = data.status !== undefined && data.status !== task.status;
+  const statusChanged = data.status !== undefined;
 
   const updated = await prisma.$transaction(async (tx) => {
     const saved = await tx.task.update({

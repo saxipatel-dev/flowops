@@ -113,7 +113,7 @@ export async function seedDatabase(prisma) {
       data: { ...fields, assignedTo: assignee.id, createdBy: creator.id, requestId, createdAt },
     });
     await log(creator.id, 'created task', 'task', task.id, task.title, createdAt);
-    await log(creator.id, 'assigned task', 'task', task.id, `Assigned to ${assignee.name}`, createdAt);
+    await log(creator.id, 'assigned task', 'task', task.id, `${task.title}: assigned to ${assignee.name}`, createdAt);
     await prisma.notification.create({
       data: {
         userId: assignee.id,
