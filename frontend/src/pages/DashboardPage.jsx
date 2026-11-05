@@ -65,8 +65,8 @@ export default function DashboardPage() {
                           {task.title}
                         </Link>
                       </td>
-                      {isTeamView && <td>{task.assignee.name}</td>}
-                      <td className={isOverdue(task) ? 'font-medium text-red-600' : ''}>
+                      {isTeamView && <td className="whitespace-nowrap">{task.assignee.name}</td>}
+                      <td className={`whitespace-nowrap ${isOverdue(task) ? 'font-medium text-red-600' : ''}`}>
                         {formatDate(task.dueDate)}
                         {isOverdue(task) && ' (overdue)'}
                       </td>
