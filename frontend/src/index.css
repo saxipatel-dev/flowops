@@ -1,0 +1,45 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-navy: #17263d;
+  --color-brand: #3468a8;
+  --color-brand-dark: #2a5589;
+  --color-page: #eff4fa;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  @apply bg-page text-slate-800 antialiased;
+}
+
+:focus-visible {
+  @apply outline-2 outline-offset-2 outline-brand;
+}
+
+.input {
+  @apply block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs placeholder:text-slate-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none disabled:bg-slate-100;
+}
+
+.input-error {
+  @apply border-red-400 focus:border-red-500 focus:ring-red-500;
+}
+
+.card {
+  @apply rounded-lg border border-slate-200 bg-white shadow-xs;
+}
+
+.table-basic {
+  @apply min-w-full divide-y divide-slate-200 text-sm;
+}
+
+.table-basic th {
+  @apply bg-slate-50 px-4 py-2.5 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase;
+}
+
+.table-basic td {
+  @apply px-4 py-3 align-middle text-slate-700;
+}
+
+.link {
+  @apply font-medium text-brand hover:text-brand-dark hover:underline;
+}
