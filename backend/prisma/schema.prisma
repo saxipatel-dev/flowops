@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum RequestCategory {
+  EQUIPMENT
+  PURCHASE
+  IT_SUPPORT
+  GENERAL_OPERATIONS
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Department {
+  id        Int    @id @default(autoincrement())
+  name      String @unique
+  managerId Int?   @map("manager_id")
+
+  manager User?  @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
+  users   User[] @relation("DepartmentMembers")
+
+  @@map("departments")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role     @default(EMPLOYEE)
+  jobTitle     String?  @map("job_title")
+  departmentId Int?     @map("department_id")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  department         Department?    @relation("DepartmentMembers", fields: [departmentId], references: [id], onDelete: SetNull)
+  managedDepartments Department[]   @relation("DepartmentManager")
+  assignedTasks      Task[]         @relation("TaskAssignee")
+  createdTasks       Task[]         @relation("TaskCreator")
+  requests           Request[]      @relation("RequestRequester")
+  requestsToReview   Request[]      @relation("RequestReviewer")
+  reviewedRequests   Request[]      @relation("RequestReviewedBy")
+  comments           Comment[]
+  notifications      Notification[]
+  activityLogs       ActivityLog[]
+
+  @@map("users")
+}
+
+model Task {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String     @default("")
+  status      TaskStatus @default(TODO)
+  priority    Priority   @default(MEDIUM)
+  assignedTo  Int        @map("assigned_to")
+  createdBy   Int        @map("created_by")
+  requestId   Int?       @unique @map("request_id")
+  dueDate     DateTime?  @map("due_date")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  assignee User      @relation("TaskAssignee", fields: [assignedTo], references: [id])
+  creator  User      @relation("TaskCreator", fields: [createdBy], references: [id])
+  request  Request?  @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  comments Comment[]
+
+  @@index([assignedTo])
+  @@map("tasks")
+}
+
+model Request {
+  id            Int             @id @default(autoincrement())
+  title         String
+  description   String
+  category      RequestCategory
+  priority      Priority        @default(MEDIUM)
+  estimatedCost Decimal?        @map("estimated_cost") @db.Decimal(10, 2)
+  status        RequestStatus   @default(PENDING)
+  requestedBy   Int             @map("requested_by")
+  reviewerId    Int             @map("reviewer_id")
+  reviewedBy    Int?            @map("reviewed_by")
+  reviewComment String?         @map("review_comment")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  reviewedAt    DateTime?       @map("reviewed_at")
+
+  requester User      @relation("RequestRequester", fields: [requestedBy], references: [id])
+  reviewer  User      @relation("RequestReviewer", fields: [reviewerId], references: [id])
+  decidedBy User?     @relation("RequestReviewedBy", fields: [reviewedBy], references: [id])
+  task      Task?
+  comments  Comment[]
+
+  @@index([requestedBy])
+  @@index([reviewerId, status])
+  @@map("requests")
+}
+
+// A comment belongs to either a task or a request.
+model Comment {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  taskId    Int?     @map("task_id")
+  requestId Int?     @map("request_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User     @relation(fields: [userId], references: [id])
+  task    Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  request Request? @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  message   String
+  link      String?
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  action     String
+  entityType String   @map("entity_type")
+  entityId   Int      @map("entity_id")
+  details    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId])
+  @@map("activity_logs")
+}
+
+// Used by connect-pg-simple to store login sessions.
+model Session {
+  sid    String   @id @db.VarChar
+  sess   Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire], map: "IDX_session_expire")
+  @@map("session")
+}
