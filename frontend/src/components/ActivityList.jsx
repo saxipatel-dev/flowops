@@ -25,7 +25,7 @@ export default function ActivityList({ activity, showLinks = true }) {
                 <span className="font-medium text-slate-900">{entry.user.name}</span> {entry.action}
                 {entry.details && (
                   <>
-                    {' — '}
+                    {': '}
                     {link ? (
                       <Link to={link} className="link">
                         {entry.details}
