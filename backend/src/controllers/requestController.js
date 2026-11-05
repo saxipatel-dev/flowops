@@ -55,7 +55,12 @@ async function findReviewer(user) {
     : null;
 
   const departmentManager = department?.manager;
-  if (departmentManager && departmentManager.isActive && departmentManager.id !== user.id) {
+  if (
+    departmentManager &&
+    departmentManager.isActive &&
+    departmentManager.role === 'MANAGER' &&
+    departmentManager.id !== user.id
+  ) {
     return departmentManager;
   }
 
@@ -186,6 +191,10 @@ export async function decideRequest(req, res) {
 
   if (needsFollowUp && !(await canAssignTo(req.user, assigneeId))) {
     throw forbidden('You can only assign the follow-up task to an active member of your team.');
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  if (needsFollowUp && data.dueDate && data.dueDate < today) {
+    throw badRequest('Due date cannot be in the past.');
   }
 
   const result = await prisma.$transaction(async (tx) => {

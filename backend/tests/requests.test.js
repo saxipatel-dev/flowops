@@ -158,4 +158,28 @@ describe('approvals', () => {
     expect(response.status).toBe(200);
     expect(response.body.requests.every((item) => item.reviewerId === daniel.id && item.status === 'PENDING')).toBe(true);
   });
+
+  it('rejects a follow-up task due date in the past', async () => {
+    const maya = await loginAs('maya@flowops.test');
+    const created = await submitRequest(maya, { title: 'Headset' });
+    const manager = await loginAs('daniel@flowops.test');
+
+    const response = await manager
+      .post(`/api/requests/${created.body.request.id}/decision`)
+      .send({ decision: 'approve', dueDate: '2020-01-01' });
+    expect(response.status).toBe(400);
+    expect(await prisma.task.count({ where: { requestId: created.body.request.id } })).toBe(0);
+  });
+
+  it('does not send new requests to a department manager who is no longer a manager', async () => {
+    const daniel = await findUser('daniel@flowops.test');
+    await prisma.user.update({ where: { id: daniel.id }, data: { role: 'EMPLOYEE' } });
+
+    const maya = await loginAs('maya@flowops.test');
+    const response = await submitRequest(maya, { title: 'Monitor arm' });
+    expect(response.status).toBe(201);
+    expect(response.body.request.reviewerId).not.toBe(daniel.id);
+
+    await prisma.user.update({ where: { id: daniel.id }, data: { role: 'MANAGER' } });
+  });
 });

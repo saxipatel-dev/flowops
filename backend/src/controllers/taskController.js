@@ -193,6 +193,9 @@ export async function updateTask(req, res) {
   if (assigneeChanged && !(await canAssignTo(req.user, data.assignedTo))) {
     throw forbidden('You can only assign tasks to active members of your team.');
   }
+  if (data.dueDate && isPastDate(data.dueDate)) {
+    throw badRequest('Due date cannot be in the past.');
+  }
   const statusChanged = data.status !== undefined;
 
   const updated = await prisma.$transaction(async (tx) => {

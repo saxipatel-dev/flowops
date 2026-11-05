@@ -105,6 +105,14 @@ describe('tasks', () => {
     expect(response.status).toBe(400);
   });
 
+  it('rejects changing a task due date to the past', async () => {
+    const maya = await findUser('maya@flowops.test');
+    const task = await prisma.task.findFirst({ where: { assignedTo: maya.id } });
+    const manager = await loginAs('daniel@flowops.test');
+    const response = await manager.patch(`/api/tasks/${task.id}`).send({ dueDate: '2020-01-01' });
+    expect(response.status).toBe(400);
+  });
+
   it('lets an assignee change only the status', async () => {
     const maya = await findUser('maya@flowops.test');
     const task = await prisma.task.findFirst({ where: { assignedTo: maya.id } });
