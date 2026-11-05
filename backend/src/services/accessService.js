@@ -34,8 +34,11 @@ export async function canManageTask(user, task) {
 export async function canViewRequest(user, request) {
   if (user.role === 'ADMIN') return true;
   if (request.requestedBy === user.id || request.reviewerId === user.id) return true;
-  if (user.role === 'MANAGER') return isInTeam(user.id, request.requestedBy);
-  return false;
+  if (user.role === 'MANAGER' && (await isInTeam(user.id, request.requestedBy))) return true;
+
+  // The person fulfilling the follow-up task needs to see the original request.
+  const followUpTask = await prisma.task.count({ where: { requestId: request.id, assignedTo: user.id } });
+  return followUpTask > 0;
 }
 
 // Managers may assign work to themselves or their team. Admins may assign to anyone active.
