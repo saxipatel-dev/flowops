@@ -4,6 +4,7 @@ import { badRequest, forbidden, notFound } from '../utils/httpError.js';
 import { userSummary } from '../utils/selects.js';
 import { getPage, PAGE_SIZE } from '../utils/pagination.js';
 import { parseId } from '../utils/parseId.js';
+import { localToday } from '../utils/dates.js';
 import { taskStatusLabels } from '../utils/labels.js';
 import { canViewTask, canManageTask, canAssignTo, getVisibleTaskFilter } from '../services/accessService.js';
 import { logActivity, notify } from '../services/activityService.js';
@@ -39,9 +40,9 @@ const taskListInclude = {
   creator: { select: userSummary },
 };
 
-function isPastDate(date) {
-  const today = new Date(new Date().toISOString().slice(0, 10));
-  return date < today;
+// Due dates are calendar days, so "the past" is judged against the user's own today.
+function isPastDate(date, utcOffset) {
+  return date < localToday(utcOffset);
 }
 
 async function loadTask(user, id) {
@@ -110,7 +111,7 @@ export async function getTask(req, res) {
 export async function createTask(req, res) {
   const data = createTaskSchema.parse(req.body);
 
-  if (data.dueDate && isPastDate(data.dueDate)) {
+  if (data.dueDate && isPastDate(data.dueDate, req.utcOffset)) {
     throw badRequest('Due date cannot be in the past.');
   }
   if (!(await canAssignTo(req.user, data.assignedTo))) {
@@ -186,7 +187,7 @@ export async function updateTask(req, res) {
   if (assigneeChanged && !(await canAssignTo(req.user, data.assignedTo))) {
     throw forbidden('You can only assign tasks to active members of your team.');
   }
-  if (data.dueDate && isPastDate(data.dueDate)) {
+  if (data.dueDate && isPastDate(data.dueDate, req.utcOffset)) {
     throw badRequest('Due date cannot be in the past.');
   }
   const statusChanged = data.status !== undefined;

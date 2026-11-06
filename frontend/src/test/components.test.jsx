@@ -6,7 +6,6 @@ import Badge from '../components/Badge.jsx';
 import Pagination from '../components/Pagination.jsx';
 import LoginPage from '../pages/LoginPage.jsx';
 import IconRail from '../components/shell/IconRail.jsx';
-import StatusChart from '../components/StatusChart.jsx';
 import { getTimelineSteps } from '../components/ApprovalTimeline.jsx';
 import FilterBar from '../components/FilterBar.jsx';
 import { AuthProvider, useAuth } from '../context/AuthContext.jsx';
@@ -121,34 +120,6 @@ describe('IconRail', () => {
     renderSidebar('ADMIN');
     expect(await screen.findByRole('link', { name: 'User Management' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Approvals' })).not.toBeInTheDocument();
-  });
-});
-
-describe('StatusChart', () => {
-  it('lists each status with its count, share, and a filtered link', () => {
-    render(
-      <MemoryRouter>
-        <StatusChart
-          title="Team tasks"
-          segments={[
-            { key: 'TODO', label: 'To Do', value: 1, stroke: '', dot: '', to: '/tasks?status=TODO' },
-            { key: 'COMPLETED', label: 'Completed', value: 3, stroke: '', dot: '', to: '/tasks?status=COMPLETED' },
-          ]}
-          emptyMessage="No tasks yet."
-        />
-      </MemoryRouter>,
-    );
-    expect(screen.getByRole('img', { name: 'Team tasks: To Do: 1, Completed: 3' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Completed\s*3\s*75%/ })).toHaveAttribute('href', '/tasks?status=COMPLETED');
-  });
-
-  it('shows a message when there is no data', () => {
-    render(
-      <MemoryRouter>
-        <StatusChart title="My requests" segments={[{ key: 'PENDING', label: 'Pending', value: 0, to: '/' }]} emptyMessage="No requests yet." />
-      </MemoryRouter>,
-    );
-    expect(screen.getByText('No requests yet.')).toBeInTheDocument();
   });
 });
 

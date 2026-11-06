@@ -36,19 +36,25 @@ export function toDateInput(value) {
   return value ? new Date(value).toISOString().slice(0, 10) : '';
 }
 
-export function isOverdue(task) {
+// The user's own calendar day as YYYY-MM-DD. Due dates are calendar days, so they are
+// compared with this, never with the UTC date.
+export function localDayKey(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+export function isOverdue(task, now = new Date()) {
   if (!task.dueDate || task.status === 'COMPLETED') return false;
-  return task.dueDate.slice(0, 10) < new Date().toISOString().slice(0, 10);
+  return task.dueDate.slice(0, 10) < localDayKey(now);
 }
 
 export const requestCode = (id) => `REQ-${String(id).padStart(4, '0')}`;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// "Overdue by 2 days", "Due today", "Due in 3 days". Compares calendar days in UTC like formatDate.
+// "Overdue by 2 days", "Due today", "Due in 3 days", counted from the user's own today.
 export function formatDueLabel(value, now = new Date()) {
   const due = Date.parse(String(value).slice(0, 10));
-  const today = Date.parse(now.toISOString().slice(0, 10));
+  const today = Date.parse(localDayKey(now));
   const days = Math.round((due - today) / DAY_MS);
   if (days < 0) return `Overdue by ${-days} ${-days === 1 ? 'day' : 'days'}`;
   if (days === 0) return 'Due today';

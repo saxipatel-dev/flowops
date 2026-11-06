@@ -142,3 +142,27 @@ test('the command palette finds only records the user can open', async ({ page }
   await page.getByRole('combobox', { name: 'Search' }).fill('laptops');
   await expect(page.getByText('No tasks or requests match “laptops”.')).toBeVisible();
 });
+
+test('mission control moves a task from the week map', async ({ page }) => {
+  await login(page, 'maya@flowops.test');
+  await expect(page.getByRole('heading', { name: /^Good (morning|afternoon|evening), Maya$/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Operations Pulse' })).toBeVisible();
+
+  // Seed due dates are relative to today, so look ahead week by week for one of Maya's open tasks.
+  const openStop = page.getByRole('button', { name: /, you, To do,/ }).first();
+  for (let week = 0; week < 4 && !(await openStop.isVisible()); week++) {
+    await page.getByRole('button', { name: 'Next week' }).click();
+    await page.waitForLoadState('networkidle');
+  }
+  const label = await openStop.getAttribute('aria-label');
+  const title = label.split(', you,')[0];
+  await openStop.click();
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await expect(page.getByText(`Moved “${title}” to In Progress.`)).toBeVisible();
+  await expect(page.getByRole('button', { name: new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}, you, In progress`) })).toBeVisible();
+
+  // The change is saved, not just drawn.
+  await page.getByRole('link', { name: 'Open task' }).click();
+  await expect(page.getByRole('heading', { name: title })).toBeVisible();
+  await expect(page.getByText('In Progress').first()).toBeVisible();
+});

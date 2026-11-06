@@ -6,6 +6,7 @@ import { getPage, PAGE_SIZE } from '../utils/pagination.js';
 import { parseId } from '../utils/parseId.js';
 import { canViewRequest, canAssignTo, getVisibleRequestFilter } from '../services/accessService.js';
 import { logActivity, notify } from '../services/activityService.js';
+import { DAY_IN_MS, localDayKey, localToday } from '../utils/dates.js';
 
 const categories = ['EQUIPMENT', 'PURCHASE', 'IT_SUPPORT', 'GENERAL_OPERATIONS'];
 const statuses = ['PENDING', 'APPROVED', 'REJECTED'];
@@ -183,7 +184,7 @@ export async function decideRequest(req, res) {
   if (needsFollowUp && !(await canAssignTo(req.user, assigneeId))) {
     throw forbidden('You can only assign the follow-up task to an active member of your team.');
   }
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDayKey(new Date(), req.utcOffset);
   if (needsFollowUp && data.dueDate && data.dueDate < today) {
     throw badRequest('Due date cannot be in the past.');
   }
@@ -227,7 +228,7 @@ export async function decideRequest(req, res) {
 
     let task = null;
     if (needsFollowUp) {
-      const defaultDueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const defaultDueDate = new Date(localToday(req.utcOffset).getTime() + 7 * DAY_IN_MS).toISOString().slice(0, 10);
       task = await tx.task.create({
         data: {
           title: `Fulfil request: ${request.title}`,

@@ -33,8 +33,11 @@
   /* Text */
   --fo-ink: #e8eaf4;
   --fo-ink-2: #c9cde0;
-  --fo-muted: #a3a9c2;
-  --fo-faint: #7f86a3;
+  --fo-muted: #b8bdd3;
+  --fo-faint: #9097b3;
+
+  /* The faint blueprint grid behind pages */
+  --fo-grid: rgb(255 255 255 / 0.022);
 
   /* Accent: signal violet marks "you are here"; action violet fills primary buttons */
   --fo-accent: #9d8cff;
@@ -103,6 +106,8 @@
   --animate-slide-in-right: slide-in-right 240ms var(--ease-out-soft);
   --animate-slide-in-up: slide-in-up 240ms var(--ease-out-soft);
   --animate-pulse-ring: pulse-ring 700ms ease-out;
+  --animate-draw-x: draw-x 600ms var(--ease-out-soft) backwards;
+  --animate-grow-y: grow-y 500ms var(--ease-out-soft) backwards;
 
   @keyframes fade-up {
     from { opacity: 0; transform: translateY(6px); }
@@ -120,6 +125,14 @@
     from { transform: translateY(100%); }
     to { transform: none; }
   }
+  @keyframes grow-y {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
+  }
+  @keyframes draw-x {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
   @keyframes pulse-ring {
     from { box-shadow: 0 0 0 0 rgb(157 140 255 / 0.7); }
     to { box-shadow: 0 0 0 14px rgb(157 140 255 / 0); }
@@ -131,8 +144,8 @@
     @apply bg-canvas font-sans text-sm text-ink-2 antialiased;
     /* Faint blueprint grid behind every page */
     background-image:
-      linear-gradient(var(--fo-line-soft) 1px, transparent 1px),
-      linear-gradient(90deg, var(--fo-line-soft) 1px, transparent 1px);
+      linear-gradient(var(--fo-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--fo-grid) 1px, transparent 1px);
     background-size: 48px 48px;
     background-attachment: fixed;
   }
@@ -196,6 +209,17 @@
 
   .link {
     @apply font-medium text-accent transition-colors hover:text-ink hover:underline;
+  }
+
+  /* A ticket with a tear-off stub: notches are cut into both sides where the stub begins. */
+  .ticket {
+    --notch-y: 50%;
+    -webkit-mask:
+      radial-gradient(circle at 0 var(--notch-y), transparent 7px, #000 7.5px) left / 51% 100% no-repeat,
+      radial-gradient(circle at 100% var(--notch-y), transparent 7px, #000 7.5px) right / 51% 100% no-repeat;
+    mask:
+      radial-gradient(circle at 0 var(--notch-y), transparent 7px, #000 7.5px) left / 51% 100% no-repeat,
+      radial-gradient(circle at 100% var(--notch-y), transparent 7px, #000 7.5px) right / 51% 100% no-repeat;
   }
 
   /* Small uppercase label used above sections and in data rows */

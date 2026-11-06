@@ -1,13 +1,13 @@
-// Light pastel discs with dark initials stay readable on every dark surface.
+// Light pastel discs with dark initials stay readable on every dark surface: [disc, initials].
 const palette = [
-  'bg-[#b9b0ff] text-[#151233]',
-  'bg-[#9ccfff] text-[#0d2236]',
-  'bg-[#7fe3c8] text-[#0b2a22]',
-  'bg-[#f7cf8a] text-[#33230a]',
-  'bg-[#f0a3b5] text-[#3a1420]',
-  'bg-[#c9b8ff] text-[#1d1440]',
-  'bg-[#8fe0e0] text-[#0b2b2b]',
-]
+  ['#b9b0ff', '#151233'],
+  ['#9ccfff', '#0d2236'],
+  ['#7fe3c8', '#0b2a22'],
+  ['#f7cf8a', '#33230a'],
+  ['#f0a3b5', '#3a1420'],
+  ['#c9b8ff', '#1d1440'],
+  ['#8fe0e0', '#0b2b2b'],
+];
 
 const sizes = {
   xs: 'h-5 w-5 text-[10px]',
@@ -21,17 +21,23 @@ export function initials(name = '') {
   return ((parts[0]?.[0] || '') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
 }
 
-// The same name always gets the same color.
-function colorFor(name = '') {
+// The same name always gets the same colour. Also used to tint that person's line on the week map.
+export function avatarColor(name = '') {
   let hash = 0;
   for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) % 997;
-  return palette[hash % palette.length];
+  return palette[hash % palette.length][0];
+}
+
+function textColorFor(name = '') {
+  const disc = avatarColor(name);
+  return palette.find(([color]) => color === disc)[1];
 }
 
 export default function Avatar({ name, size = 'md' }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full font-semibold ${sizes[size]} ${colorFor(name)}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full font-semibold ${sizes[size]}`}
+      style={{ backgroundColor: avatarColor(name), color: textColorFor(name) }}
       aria-hidden="true"
     >
       {initials(name)}

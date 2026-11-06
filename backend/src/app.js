@@ -14,6 +14,7 @@ import commentRoutes from './routes/commentRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import activityRoutes from './routes/activityRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import { readUtcOffset } from './middleware/timezone.js';
 
 const PgSession = connectPgSimple(session);
 
@@ -44,6 +45,7 @@ export function createApp() {
     }),
   );
   app.use('/api', requireAjaxHeader);
+  app.use('/api', readUtcOffset);
 
   app.get('/api/health', async (req, res) => {
     await prisma.$queryRaw`SELECT 1`;

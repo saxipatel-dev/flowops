@@ -163,6 +163,21 @@ describe('tasks', () => {
     expect(await prisma.task.findUnique({ where: { id: task.id } })).toBeNull();
   });
 
+  it("judges past due dates by the user's own calendar day", async () => {
+    // At UTC-12 the local day is always earlier than at UTC+14, so a date that is
+    // "today" at UTC-12 is already in the past at UTC+14.
+    const westToday = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const maya = await findUser('maya@flowops.test');
+    const agent = await loginAs('daniel@flowops.test');
+    const task = { title: 'Due today, wherever I am', assignedTo: maya.id, dueDate: westToday };
+
+    const west = await agent.post('/api/tasks').set('X-UTC-Offset', '-720').send(task);
+    expect(west.status).toBe(201);
+    const east = await agent.post('/api/tasks').set('X-UTC-Offset', '840').send(task);
+    expect(east.status).toBe(400);
+    expect(east.body.error).toBe('Due date cannot be in the past.');
+  });
+
   describe('completion time', () => {
     async function mayaTodoTask() {
       const maya = await findUser('maya@flowops.test');

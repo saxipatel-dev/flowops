@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatCurrency, formatDate, formatDueLabel, formatTimeAgo, groupByDay, isOverdue, requestCode } from '../services/format.js';
+import { formatCurrency, formatDate, formatDueLabel, formatTimeAgo, groupByDay, isOverdue, localDayKey, requestCode } from '../services/format.js';
 import { validateRequest } from '../pages/NewRequestPage.jsx';
 import { validateLogin } from '../pages/LoginPage.jsx';
 
@@ -21,8 +21,17 @@ describe('format helpers', () => {
     expect(isOverdue({ dueDate: null, status: 'TODO' })).toBe(false);
   });
 
+  it("uses the user's own calendar day, not the UTC day", () => {
+    // 11pm local on 5 Nov: in many time zones it is already 6 Nov in UTC.
+    const lateEvening = new Date(2026, 10, 5, 23, 30);
+    expect(localDayKey(lateEvening)).toBe('2026-11-05');
+    expect(formatDueLabel('2026-11-05T00:00:00.000Z', lateEvening)).toBe('Due today');
+    expect(isOverdue({ dueDate: '2026-11-05T00:00:00.000Z', status: 'TODO' }, lateEvening)).toBe(false);
+    expect(isOverdue({ dueDate: '2026-11-04T00:00:00.000Z', status: 'TODO' }, lateEvening)).toBe(true);
+  });
+
   it('describes due dates relative to today', () => {
-    const now = new Date('2026-11-05T15:00:00.000Z');
+    const now = new Date(2026, 10, 5, 15, 0); // 5 Nov, 3pm on the local clock
     expect(formatDueLabel('2026-11-03T00:00:00.000Z', now)).toBe('Overdue by 2 days');
     expect(formatDueLabel('2026-11-05T00:00:00.000Z', now)).toBe('Due today');
     expect(formatDueLabel('2026-11-06T00:00:00.000Z', now)).toBe('Due tomorrow');

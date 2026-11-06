@@ -12,6 +12,13 @@ export function setUnauthorizedHandler(handler) {
   handleUnauthorized = handler;
 }
 
+// Tell the server the browser's offset from UTC, so "today" (overdue work, past due dates,
+// the dashboard) is the user's own calendar day. Read on every request in case it changes.
+api.interceptors.request.use((config) => {
+  config.headers.set('X-UTC-Offset', String(-new Date().getTimezoneOffset()));
+  return config;
+});
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {

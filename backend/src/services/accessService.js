@@ -24,6 +24,16 @@ export async function canViewTask(user, task) {
 }
 
 // Managers can edit tasks they created or that belong to their team. Admins can edit any task.
+// Returns a function answering "may this user change this task's status?" for many tasks,
+// loading the manager's team once. Same rule as canManageTask plus the assignee.
+export async function getStatusPermissionCheck(user) {
+  if (user.role === 'ADMIN') return () => true;
+  const teamIds = user.role === 'MANAGER' ? new Set(await getTeamUserIds(user.id)) : new Set();
+  return (task) =>
+    task.assignedTo === user.id ||
+    (user.role === 'MANAGER' && (task.createdBy === user.id || teamIds.has(task.assignedTo)));
+}
+
 export async function canManageTask(user, task) {
   if (user.role === 'ADMIN') return true;
   if (user.role !== 'MANAGER') return false;
