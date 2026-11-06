@@ -12,7 +12,7 @@ function Donut({ segments, total }) {
 
   return (
     <svg viewBox="0 0 36 36" className="h-24 w-24 shrink-0 sm:h-28 sm:w-28" aria-hidden="true">
-      <circle cx="18" cy="18" r={RADIUS} fill="none" strokeWidth="3.6" className="stroke-slate-100" />
+      <circle cx="18" cy="18" r={RADIUS} fill="none" strokeWidth="3.6" className="stroke-line-soft" />
       {visible.map((segment) => {
         const share = (segment.value / total) * 100;
         const length = visible.length > 1 ? Math.max(share - GAP, 0.5) : share;
@@ -32,10 +32,10 @@ function Donut({ segments, total }) {
         offset -= share;
         return circle;
       })}
-      <text x="18" y="18.5" textAnchor="middle" className="fill-navy text-[7px] font-semibold tabular-nums">
+      <text x="18" y="18.5" textAnchor="middle" className="fill-ink text-[7px] font-semibold tabular-nums">
         {total}
       </text>
-      <text x="18" y="23.5" textAnchor="middle" className="fill-slate-500 text-[3.2px]">
+      <text x="18" y="23.5" textAnchor="middle" className="fill-muted text-[3.2px]">
         total
       </text>
     </svg>
@@ -51,7 +51,7 @@ export default function StatusChart({ title, description, icon, segments, emptyM
     <Card className="flex flex-col">
       <CardHeader title={title} description={description} icon={icon} />
       {total === 0 ? (
-        <p className="flex flex-1 items-center justify-center px-4 py-10 text-sm text-slate-500">{emptyMessage}</p>
+        <p className="flex flex-1 items-center justify-center px-4 py-10 text-sm text-muted">{emptyMessage}</p>
       ) : (
         <div className="flex flex-1 items-center justify-center gap-5 px-4 py-4 sm:gap-8 sm:px-5">
           <figure className="m-0" role="img" aria-label={`${title}: ${summary}`}>
@@ -62,12 +62,12 @@ export default function StatusChart({ title, description, icon, segments, emptyM
               <li key={segment.key}>
                 <Link
                   to={segment.to}
-                  className="-mx-2 flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-slate-50"
+                  className="-mx-2 flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-sunken"
                 >
                   <span className={`h-2 w-2 shrink-0 rounded-full ${segment.dot}`} aria-hidden="true" />
-                  <span className="flex-1 truncate text-slate-600">{segment.label}</span>
-                  <span className="font-semibold text-navy tabular-nums">{segment.value}</span>
-                  <span className="w-9 text-right text-xs text-slate-500 tabular-nums">
+                  <span className="flex-1 truncate text-muted">{segment.label}</span>
+                  <span className="font-semibold text-ink tabular-nums">{segment.value}</span>
+                  <span className="w-9 text-right text-xs text-muted tabular-nums">
                     {Math.round((segment.value / total) * 100)}%
                   </span>
                 </Link>

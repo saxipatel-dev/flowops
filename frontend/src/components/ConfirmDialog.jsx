@@ -24,11 +24,11 @@ export default function ConfirmDialog({ open, title, message, confirmLabel = 'Co
         onCancel();
       }}
       aria-labelledby={titleId}
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-xl border border-slate-200 p-0 shadow-overlay backdrop:bg-slate-900/40 backdrop:backdrop-blur-[2px]"
+      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-xl border border-line p-0 shadow-overlay backdrop:bg-black/60 backdrop:backdrop-blur-[2px]"
     >
       <div className="flex gap-4 p-5">
         <span
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${isDanger ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${isDanger ? 'bg-bad-soft text-bad' : 'bg-ok-soft text-ok'}`}
           aria-hidden="true"
         >
           <Icon className="h-[18px] w-[18px]" />
@@ -37,10 +37,10 @@ export default function ConfirmDialog({ open, title, message, confirmLabel = 'Co
           <h2 id={titleId} className="text-base font-semibold">
             {title}
           </h2>
-          <p className="mt-1 text-sm text-slate-600">{message}</p>
+          <p className="mt-1 text-sm text-muted">{message}</p>
         </div>
       </div>
-      <div className="flex justify-end gap-2 rounded-b-xl border-t border-slate-200 bg-surface-muted px-5 py-3">
+      <div className="flex justify-end gap-2 rounded-b-xl border-t border-line bg-sunken px-5 py-3">
         <Button variant="secondary" onClick={onCancel} disabled={loading}>
           Cancel
         </Button>

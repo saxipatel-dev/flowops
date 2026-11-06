@@ -109,8 +109,11 @@ export async function seedDatabase(prisma) {
 
   async function addTask({ creator, assignee, createdDaysAgo, statusHistory = [], requestId, ...fields }) {
     const createdAt = daysAgo(createdDaysAgo, 11);
+    // Completed demo tasks get the same time as their logged "→ Completed" change.
+    const completion = fields.status === 'COMPLETED' ? statusHistory.findLast((c) => c.text.endsWith('Completed')) : null;
+    const completedAt = completion ? daysAgo(completion.daysAgo, 15) : null;
     const task = await prisma.task.create({
-      data: { ...fields, assignedTo: assignee.id, createdBy: creator.id, requestId, createdAt },
+      data: { ...fields, assignedTo: assignee.id, createdBy: creator.id, requestId, createdAt, completedAt },
     });
     await log(creator.id, 'created task', 'task', task.id, task.title, createdAt);
     await log(creator.id, 'assigned task', 'task', task.id, `${task.title}: assigned to ${assignee.name}`, createdAt);

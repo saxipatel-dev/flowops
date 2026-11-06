@@ -162,4 +162,92 @@ describe('tasks', () => {
     expect((await creator.delete(`/api/tasks/${task.id}`)).status).toBe(200);
     expect(await prisma.task.findUnique({ where: { id: task.id } })).toBeNull();
   });
+
+  describe('completion time', () => {
+    async function mayaTodoTask() {
+      const maya = await findUser('maya@flowops.test');
+      return prisma.task.findFirst({ where: { assignedTo: maya.id, status: 'TODO' } });
+    }
+
+    it('sets completedAt when a task is completed and clears it when reopened', async () => {
+      const task = await mayaTodoTask();
+      expect(task.completedAt).toBeNull();
+      const agent = await loginAs('maya@flowops.test');
+
+      const before = Date.now();
+      const done = await agent.patch(`/api/tasks/${task.id}`).send({ status: 'COMPLETED' });
+      expect(done.status).toBe(200);
+      const completedAt = new Date(done.body.task.completedAt).getTime();
+      expect(completedAt).toBeGreaterThanOrEqual(before);
+      expect(completedAt).toBeLessThanOrEqual(Date.now());
+
+      const reopened = await agent.patch(`/api/tasks/${task.id}`).send({ status: 'IN_PROGRESS' });
+      expect(reopened.status).toBe(200);
+      expect(reopened.body.task.completedAt).toBeNull();
+      expect((await prisma.task.findUnique({ where: { id: task.id } })).completedAt).toBeNull();
+    });
+
+    it('records a new time when a reopened task is completed again', async () => {
+      const task = await prisma.task.findFirst({ where: { title: 'Update onboarding guide' } });
+      const agent = await loginAs('daniel@flowops.test');
+
+      const first = await agent.patch(`/api/tasks/${task.id}`).send({ status: 'COMPLETED' });
+      await agent.patch(`/api/tasks/${task.id}`).send({ status: 'TODO' });
+      const second = await agent.patch(`/api/tasks/${task.id}`).send({ status: 'COMPLETED' });
+
+      expect(second.status).toBe(200);
+      expect(new Date(second.body.task.completedAt).getTime()).toBeGreaterThan(
+        new Date(first.body.task.completedAt).getTime(),
+      );
+    });
+
+    it('keeps completedAt when a completed task is saved without a status change', async () => {
+      const task = await prisma.task.findFirst({ where: { title: 'Update onboarding guide' } });
+      const agent = await loginAs('daniel@flowops.test');
+      await agent.patch(`/api/tasks/${task.id}`).send({ status: 'COMPLETED' });
+      const stored = (await prisma.task.findUnique({ where: { id: task.id } })).completedAt;
+      expect(stored).not.toBeNull();
+
+      await agent.patch(`/api/tasks/${task.id}`).send({ status: 'COMPLETED' });
+      await agent.patch(`/api/tasks/${task.id}`).send({ title: 'Update onboarding guide (v2)' });
+
+      const after = await prisma.task.findUnique({ where: { id: task.id } });
+      expect(after.completedAt.getTime()).toBe(stored.getTime());
+    });
+
+    it('sets completedAt on a task created as completed', async () => {
+      const maya = await findUser('maya@flowops.test');
+      const agent = await loginAs('daniel@flowops.test');
+      const response = await agent
+        .post('/api/tasks')
+        .send({ title: 'Already finished task', assignedTo: maya.id, status: 'COMPLETED', priority: 'LOW' });
+      expect(response.status).toBe(201);
+      expect(response.body.task.completedAt).not.toBeNull();
+    });
+
+    it('leaves completedAt empty for tasks completed before the column existed', async () => {
+      // The migration leaves existing completed rows with no completion time.
+      const [maya, daniel] = await Promise.all([findUser('maya@flowops.test'), findUser('daniel@flowops.test')]);
+      const legacy = await prisma.task.create({
+        data: { title: 'Completed before tracking', status: 'COMPLETED', assignedTo: maya.id, createdBy: daniel.id },
+      });
+      expect(legacy.completedAt).toBeNull();
+
+      const agent = await loginAs('daniel@flowops.test');
+      expect((await agent.get(`/api/tasks/${legacy.id}`)).body.task.completedAt).toBeNull();
+
+      await agent.patch(`/api/tasks/${legacy.id}`).send({ title: 'Completed before tracking (renamed)' });
+      expect((await prisma.task.findUnique({ where: { id: legacy.id } })).completedAt).toBeNull();
+    });
+
+    it('includes the follow-up task completion time on the request', async () => {
+      const task = await prisma.task.findFirst({ where: { title: 'Fulfil request: Office supplies restock' } });
+      expect(task.completedAt).not.toBeNull();
+
+      const requester = await loginAs('maya@flowops.test');
+      const response = await requester.get(`/api/requests/${task.requestId}`);
+      expect(response.status).toBe(200);
+      expect(new Date(response.body.request.task.completedAt).getTime()).toBe(task.completedAt.getTime());
+    });
+  });
 });

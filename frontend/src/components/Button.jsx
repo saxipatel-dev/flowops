@@ -1,11 +1,10 @@
 const variants = {
-  primary: 'bg-brand text-white shadow-xs hover:bg-brand-dark disabled:bg-brand/50',
-  secondary:
-    'border border-slate-300 bg-white text-slate-700 shadow-xs hover:border-slate-400 hover:bg-slate-50 disabled:text-slate-400 disabled:hover:bg-white',
-  ghost: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:text-slate-400',
-  dangerOutline: 'border border-red-200 bg-white text-red-700 shadow-xs hover:border-red-300 hover:bg-red-50 disabled:text-red-300',
-  danger: 'bg-red-600 text-white shadow-xs hover:bg-red-700 disabled:bg-red-300',
-  success: 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700 disabled:bg-emerald-300',
+  primary: 'bg-accent-strong text-on-accent shadow-raised hover:bg-accent-hover disabled:opacity-50',
+  secondary: 'border border-line bg-raised text-ink hover:border-line-strong hover:bg-hover disabled:opacity-50',
+  ghost: 'text-muted hover:bg-hover hover:text-ink disabled:opacity-50',
+  dangerOutline: 'border border-bad/40 text-bad hover:border-bad hover:bg-bad-soft disabled:opacity-50',
+  danger: 'bg-bad text-on-status hover:bg-bad/85 disabled:opacity-50',
+  success: 'bg-ok text-on-status hover:bg-ok/85 disabled:opacity-50',
 };
 
 const sizes = {
@@ -16,7 +15,7 @@ const sizes = {
 
 // Shared so links that act as buttons look identical to real buttons.
 export function buttonClasses(variant = 'primary', size = 'md') {
-  return `inline-flex shrink-0 items-center justify-center rounded-lg font-medium whitespace-nowrap transition-colors disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]}`;
+  return `inline-flex shrink-0 items-center justify-center rounded-lg font-medium whitespace-nowrap transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:active:scale-100 ${variants[variant]} ${sizes[size]}`;
 }
 
 export default function Button({

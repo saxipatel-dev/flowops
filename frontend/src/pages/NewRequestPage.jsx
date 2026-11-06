@@ -75,7 +75,7 @@ export default function NewRequestPage() {
           <input id="estimatedCost" name="estimatedCost" type="number" min="0" step="0.01" className={`input sm:max-w-48 ${fieldErrors.estimatedCost ? 'input-error' : ''}`} value={form.estimatedCost} onChange={handleChange} />
         </FormField>
         </div>
-        <div className="flex justify-end gap-2 rounded-b-xl border-t border-slate-200 bg-surface-muted px-5 py-3">
+        <div className="flex justify-end gap-2 rounded-b-xl border-t border-line bg-sunken px-5 py-3">
           <Link to="/requests" className={buttonClasses('secondary')}>
             Cancel
           </Link>

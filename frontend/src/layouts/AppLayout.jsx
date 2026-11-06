@@ -1,33 +1,30 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Outlet, useNavigate } from 'react-router';
+import { useCallback, useEffect, useState } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext.jsx';
-import Sidebar from '../components/Sidebar.jsx';
-import Header from '../components/Header.jsx';
+import IconRail from '../components/shell/IconRail.jsx';
+import TopBar from '../components/shell/TopBar.jsx';
+import MobileTabBar from '../components/shell/MobileTabBar.jsx';
+import CommandPalette from '../components/shell/CommandPalette.jsx';
 
 export default function AppLayout() {
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const menuButtonRef = useRef(null);
-  const wasOpen = useRef(false);
+  const location = useLocation();
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
-  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+  const closePalette = useCallback(() => setPaletteOpen(false), []);
 
-  // Return focus to the menu button after the mobile drawer closes.
+  // Cmd+K (Mac) or Ctrl+K opens the command palette from anywhere.
   useEffect(() => {
-    if (wasOpen.current && !sidebarOpen) menuButtonRef.current?.focus();
-    wasOpen.current = sidebarOpen;
-  }, [sidebarOpen]);
-
-  // Escape closes the mobile navigation drawer.
-  useEffect(() => {
-    if (!sidebarOpen) return undefined;
     function handleKeyDown(event) {
-      if (event.key === 'Escape') closeSidebar();
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setPaletteOpen((open) => !open);
+      }
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [sidebarOpen, closeSidebar]);
+  }, []);
 
   async function handleLogout() {
     await logout();
@@ -35,22 +32,25 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="min-h-screen lg:pl-16">
       <a
         href="#main-content"
-        className="sr-only z-50 rounded-md bg-white px-3 py-2 text-sm font-medium text-brand shadow-raised focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+        className="sr-only z-50 rounded-md bg-raised px-3 py-2 text-sm font-medium text-accent shadow-raised focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
       >
         Skip to content
       </a>
-      <Sidebar open={sidebarOpen} onClose={closeSidebar} onLogout={handleLogout} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Header onMenuClick={() => setSidebarOpen(true)} menuButtonRef={menuButtonRef} />
-        <main id="main-content" tabIndex={-1} className="flex-1 px-4 py-5 focus:outline-none sm:px-6 lg:px-8 lg:py-6">
-          <div className="mx-auto max-w-7xl">
+      <IconRail onLogout={handleLogout} />
+      <div className="flex min-w-0 flex-col">
+        <TopBar onOpenSearch={() => setPaletteOpen(true)} />
+        <main id="main-content" tabIndex={-1} className="flex-1 px-4 pt-5 pb-28 focus:outline-none sm:px-6 lg:px-8 lg:pt-7 lg:pb-10">
+          {/* Re-keyed per page so each page eases in when you navigate. */}
+          <div key={location.pathname} className="mx-auto max-w-7xl animate-fade-up">
             <Outlet />
           </div>
         </main>
       </div>
+      <MobileTabBar onLogout={handleLogout} />
+      <CommandPalette open={paletteOpen} onClose={closePalette} />
     </div>
   );
 }

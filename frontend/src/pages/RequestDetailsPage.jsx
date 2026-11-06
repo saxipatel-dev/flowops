@@ -36,7 +36,7 @@ export default function RequestDetailsPage() {
         title={request.title}
         description={
           <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-            <span className="tabular-nums">{requestCode(request.id)}</span>
+            <span className="font-mono text-[0.92em]">{requestCode(request.id)}</span>
             <Badge value={request.status} />
             <Badge value={request.priority} />
             <span>Submitted {formatDateTime(request.createdAt)}</span>
@@ -55,7 +55,7 @@ export default function RequestDetailsPage() {
         <div className="space-y-4 lg:col-span-2 lg:col-start-1 lg:row-span-2 lg:row-start-1">
           <Card>
             <CardHeader title="Description" icon={FileText} />
-            <p className="px-4 py-3.5 text-sm leading-relaxed whitespace-pre-line text-slate-700">{request.description}</p>
+            <p className="px-4 py-3.5 text-sm leading-relaxed whitespace-pre-line text-ink-2">{request.description}</p>
           </Card>
 
           {permissions.canDecide && <DecisionForm request={request} onDecided={handleDecided} />}

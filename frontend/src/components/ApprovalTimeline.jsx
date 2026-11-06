@@ -6,12 +6,12 @@ import Badge from './Badge.jsx';
 const FOLLOW_UP_CATEGORIES = ['EQUIPMENT', 'PURCHASE'];
 
 const markers = {
-  done: { icon: Check, className: 'bg-emerald-500 text-white' },
-  submitted: { icon: Send, className: 'bg-brand text-white' },
-  current: { icon: CircleDot, className: 'bg-amber-100 text-amber-700 ring-4 ring-amber-50' },
-  rejected: { icon: X, className: 'bg-red-500 text-white' },
-  upcoming: { icon: null, className: 'border-2 border-dashed border-slate-300 bg-white' },
-  task: { icon: ListChecks, className: 'bg-blue-500 text-white' },
+  done: { icon: Check, className: 'bg-ok text-white' },
+  submitted: { icon: Send, className: 'bg-accent-strong text-white' },
+  current: { icon: CircleDot, className: 'bg-warn-soft text-warn ring-4 ring-warn-soft' },
+  rejected: { icon: X, className: 'bg-bad text-white' },
+  upcoming: { icon: null, className: 'border-2 border-dashed border-line-strong bg-surface' },
+  task: { icon: ListChecks, className: 'bg-info text-white' },
 };
 
 // Builds the steps from the request's own fields: when it was submitted, who reviews it,
@@ -70,23 +70,23 @@ export default function ApprovalTimeline({ request }) {
         const isLast = index === steps.length - 1;
         return (
           <li key={step.key} className="relative flex gap-3 pb-5 last:pb-0">
-            {!isLast && <span className="absolute top-7 bottom-1 left-[11px] w-px bg-slate-200" aria-hidden="true" />}
+            {!isLast && <span className="absolute top-7 bottom-1 left-[11px] w-px bg-line" aria-hidden="true" />}
             <span className={`relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${marker.className}`} aria-hidden="true">
               {Icon && <Icon className="h-3.5 w-3.5" strokeWidth={2.5} />}
             </span>
             <div className="min-w-0 flex-1 pt-0.5">
-              <p className={`text-sm font-medium ${step.state === 'upcoming' ? 'text-slate-500' : 'text-navy'}`}>
+              <p className={`text-sm font-medium ${step.state === 'upcoming' ? 'text-muted' : 'text-ink'}`}>
                 {step.title}
                 {step.state === 'current' && <span className="sr-only"> (current step)</span>}
               </p>
-              {step.detail && <p className="text-xs text-slate-500">{step.detail}</p>}
+              {step.detail && <p className="text-xs text-muted">{step.detail}</p>}
               {step.time && (
-                <time dateTime={step.time} className="text-xs text-slate-500">
+                <time dateTime={step.time} className="text-xs text-muted">
                   {formatDateTime(step.time)}
                 </time>
               )}
               {step.comment && (
-                <p className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                <p className="mt-2 rounded-lg bg-sunken px-3 py-2 text-sm text-ink-2">
                   <span className="font-medium">{step.commentLabel}: </span>
                   {step.comment}
                 </p>
@@ -96,7 +96,7 @@ export default function ApprovalTimeline({ request }) {
                   <Link to={`/tasks/${step.task.id}`} className="link block text-sm">
                     {step.task.title}
                   </Link>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
                     <Badge value={step.task.status} />
                     <span>Assigned to {step.task.assignee.name}</span>
                   </div>

@@ -1,44 +1,161 @@
 @import 'tailwindcss';
 
+@import '@fontsource/ibm-plex-sans/latin-400.css';
+@import '@fontsource/ibm-plex-sans/latin-500.css';
+@import '@fontsource/ibm-plex-sans/latin-600.css';
+@import '@fontsource/schibsted-grotesk/latin-600.css';
+@import '@fontsource/schibsted-grotesk/latin-700.css';
+@import '@fontsource/schibsted-grotesk/latin-800.css';
+@import '@fontsource/ibm-plex-mono/latin-400.css';
+@import '@fontsource/ibm-plex-mono/latin-500.css';
+
+/*
+ * FlowOps 3.0 design tokens.
+ * Components use the semantic names below (surface, ink, accent, ok…), never raw palette colours.
+ * The app is dark-first: these values are the dark theme. A light theme only needs to redefine
+ * the same --fo-* variables, for example under :root[data-theme='light'].
+ */
+:root {
+  color-scheme: dark;
+
+  /* Surfaces, from the page ground up */
+  --fo-canvas: #0b0d15;
+  --fo-surface: #11141f;
+  --fo-raised: #181c2b;
+  --fo-sunken: #0e1019;
+  --fo-hover: #222739;
+
+  /* Lines */
+  --fo-line-soft: #1f2436;
+  --fo-line: #2b3047;
+  --fo-line-strong: #3a405a;
+
+  /* Text */
+  --fo-ink: #e8eaf4;
+  --fo-ink-2: #c9cde0;
+  --fo-muted: #a3a9c2;
+  --fo-faint: #7f86a3;
+
+  /* Accent: signal violet marks "you are here"; action violet fills primary buttons */
+  --fo-accent: #9d8cff;
+  --fo-accent-strong: #6c5ce7;
+  --fo-accent-hover: #7b6cf0;
+  --fo-accent-soft: rgb(157 140 255 / 0.14);
+
+  /* Status colours, used for meaning only */
+  --fo-ok: #45d6b0;
+  --fo-ok-soft: rgb(69 214 176 / 0.14);
+  --fo-warn: #f3b54a;
+  --fo-warn-soft: rgb(243 181 74 / 0.14);
+  --fo-bad: #ec6a72;
+  --fo-bad-soft: rgb(236 106 114 / 0.14);
+  --fo-info: #6cb8ff;
+  --fo-info-soft: rgb(108 184 255 / 0.14);
+
+  /* Text placed on a filled status or accent background */
+  --fo-on-accent: #ffffff;
+  --fo-on-status: #0b0d15;
+}
+
+@theme inline {
+  --color-canvas: var(--fo-canvas);
+  --color-surface: var(--fo-surface);
+  --color-raised: var(--fo-raised);
+  --color-sunken: var(--fo-sunken);
+  --color-hover: var(--fo-hover);
+  --color-line-soft: var(--fo-line-soft);
+  --color-line: var(--fo-line);
+  --color-line-strong: var(--fo-line-strong);
+  --color-ink: var(--fo-ink);
+  --color-ink-2: var(--fo-ink-2);
+  --color-muted: var(--fo-muted);
+  --color-faint: var(--fo-faint);
+  --color-accent: var(--fo-accent);
+  --color-accent-strong: var(--fo-accent-strong);
+  --color-accent-hover: var(--fo-accent-hover);
+  --color-accent-soft: var(--fo-accent-soft);
+  --color-ok: var(--fo-ok);
+  --color-ok-soft: var(--fo-ok-soft);
+  --color-warn: var(--fo-warn);
+  --color-warn-soft: var(--fo-warn-soft);
+  --color-bad: var(--fo-bad);
+  --color-bad-soft: var(--fo-bad-soft);
+  --color-info: var(--fo-info);
+  --color-info-soft: var(--fo-info-soft);
+  --color-on-accent: var(--fo-on-accent);
+  --color-on-status: var(--fo-on-status);
+}
+
 @theme {
-  /* Neutral text and surfaces */
-  --color-navy: #0f172a;
-  --color-page: #f6f7f9;
-  --color-surface-muted: #f9fafb;
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Schibsted Grotesk', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
-  /* Brand accent (indigo) */
-  --color-brand: #4f46e5;
-  --color-brand-dark: #4338ca;
-  --color-brand-soft: #eef2ff;
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.02) inset, 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-raised: 0 10px 24px -12px rgb(0 0 0 / 0.7);
+  --shadow-overlay: 0 30px 60px -20px rgb(0 0 0 / 0.85), 0 0 0 1px var(--fo-line);
+  --shadow-glow: 0 0 0 4px var(--fo-accent-soft), 0 0 18px rgb(157 140 255 / 0.45);
 
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ease-out-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
 
-  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.05);
-  --shadow-raised: 0 4px 12px -2px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.05);
-  --shadow-overlay: 0 20px 40px -12px rgb(15 23 42 / 0.25);
+  --animate-fade-up: fade-up 220ms var(--ease-out-soft);
+  --animate-scale-in: scale-in 160ms var(--ease-out-soft);
+  --animate-slide-in-right: slide-in-right 240ms var(--ease-out-soft);
+  --animate-slide-in-up: slide-in-up 240ms var(--ease-out-soft);
+  --animate-pulse-ring: pulse-ring 700ms ease-out;
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes slide-in-right {
+    from { transform: translateX(100%); }
+    to { transform: none; }
+  }
+  @keyframes slide-in-up {
+    from { transform: translateY(100%); }
+    to { transform: none; }
+  }
+  @keyframes pulse-ring {
+    from { box-shadow: 0 0 0 0 rgb(157 140 255 / 0.7); }
+    to { box-shadow: 0 0 0 14px rgb(157 140 255 / 0); }
+  }
 }
 
 @layer base {
   body {
-    @apply bg-page text-sm text-slate-700 antialiased;
-    font-feature-settings: 'cv11', 'ss01';
+    @apply bg-canvas font-sans text-sm text-ink-2 antialiased;
+    /* Faint blueprint grid behind every page */
+    background-image:
+      linear-gradient(var(--fo-line-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--fo-line-soft) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-attachment: fixed;
   }
 
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-brand;
+    @apply outline-2 outline-offset-2 outline-accent;
   }
 
   h1,
   h2,
   h3 {
-    @apply tracking-tight text-navy;
+    @apply font-display tracking-tight text-ink;
+  }
+
+  ::selection {
+    background: rgb(157 140 255 / 0.35);
   }
 }
 
 /* In the components layer so utility classes (e.g. pl-9) can override them. */
 @layer components {
   .input {
-    @apply block h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-xs transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:border-brand focus:ring-3 focus:ring-brand/15 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500;
+    @apply block h-9 w-full rounded-lg border border-line bg-sunken px-3 text-sm text-ink transition-colors placeholder:text-faint hover:border-line-strong focus:border-accent focus:ring-3 focus:ring-accent/25 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   textarea.input {
@@ -50,11 +167,11 @@
   }
 
   .input-error {
-    @apply border-red-400 hover:border-red-500 focus:border-red-500 focus:ring-red-500/15;
+    @apply border-bad hover:border-bad focus:border-bad focus:ring-bad/25;
   }
 
   .card {
-    @apply rounded-xl border border-slate-200/80 bg-white shadow-card;
+    @apply rounded-xl border border-line bg-surface shadow-card;
   }
 
   .table-basic {
@@ -62,23 +179,28 @@
   }
 
   .table-basic thead {
-    @apply border-b border-slate-200 bg-surface-muted;
+    @apply border-b border-line bg-sunken;
   }
 
   .table-basic th {
-    @apply px-4 py-2.5 text-left text-xs font-medium whitespace-nowrap text-slate-500;
+    @apply px-4 py-2.5 text-left font-mono text-[11px] font-medium tracking-wider whitespace-nowrap text-faint uppercase;
   }
 
   .table-basic td {
-    @apply px-4 py-3 align-middle text-slate-700;
+    @apply px-4 py-3 align-middle text-ink-2;
   }
 
   .table-basic tbody tr {
-    @apply border-b border-slate-100 transition-colors last:border-0;
+    @apply border-b border-line-soft transition-colors last:border-0 hover:bg-raised/60;
   }
 
   .link {
-    @apply font-medium text-brand transition-colors hover:text-brand-dark hover:underline;
+    @apply font-medium text-accent transition-colors hover:text-ink hover:underline;
+  }
+
+  /* Small uppercase label used above sections and in data rows */
+  .eyebrow {
+    @apply font-mono text-[11px] font-medium tracking-[0.12em] text-faint uppercase;
   }
 }
 

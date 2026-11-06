@@ -6,7 +6,7 @@ export default function Pagination({ page, pageSize, total, onChange }) {
   if (total <= pageSize) return null;
 
   return (
-    <div className="flex items-center justify-between border-t border-slate-200 px-4 py-2.5 text-sm text-slate-500">
+    <div className="flex items-center justify-between border-t border-line px-4 py-2.5 text-sm text-muted">
       <span>
         Page {page} of {totalPages} ({total} total)
       </span>

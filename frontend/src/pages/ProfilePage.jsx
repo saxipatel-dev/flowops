@@ -14,8 +14,8 @@ const MIN_PASSWORD_LENGTH = 8;
 
 function FormFooter({ children, note }) {
   return (
-    <div className="flex flex-col-reverse gap-3 rounded-b-xl border-t border-slate-200 bg-surface-muted px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-xs text-slate-500">{note}</p>
+    <div className="flex flex-col-reverse gap-3 rounded-b-xl border-t border-line bg-sunken px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-xs text-muted">{note}</p>
       <div className="flex justify-end">{children}</div>
     </div>
   );
@@ -32,23 +32,23 @@ function IdentityCard() {
 
   return (
     <Card className="overflow-hidden">
-      <div className="h-16 bg-gradient-to-r from-brand/90 to-indigo-400" aria-hidden="true" />
+      <div className="h-16 bg-gradient-to-r from-accent-strong/90 to-accent" aria-hidden="true" />
       <div className="-mt-8 px-4 pb-4">
-        <span className="inline-block rounded-full ring-4 ring-white">
+        <span className="inline-block rounded-full ring-4 ring-surface">
           <Avatar name={user.name} size="lg" />
         </span>
         <h2 className="mt-2 text-base font-semibold">{user.name}</h2>
-        <p className="text-sm text-slate-500">{user.jobTitle || 'No job title'}</p>
+        <p className="text-sm text-muted">{user.jobTitle || 'No job title'}</p>
         <div className="mt-2">
           <Badge value={user.role} />
         </div>
       </div>
-      <dl className="divide-y divide-slate-100 border-t border-slate-200">
+      <dl className="divide-y divide-line-soft border-t border-line">
         {rows.map(([Icon, label, value]) => (
           <div key={label} className="flex items-center gap-3 px-4 py-2.5 text-sm">
-            <Icon className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+            <Icon className="h-4 w-4 shrink-0 text-faint" aria-hidden="true" />
             <dt className="sr-only">{label}</dt>
-            <dd className="min-w-0 truncate text-slate-700">{value}</dd>
+            <dd className="min-w-0 truncate text-ink-2">{value}</dd>
           </div>
         ))}
       </dl>
@@ -118,7 +118,7 @@ function ProfileForm() {
 
 function PasswordRule({ met, children }) {
   return (
-    <li className={`flex items-center gap-1.5 text-xs ${met ? 'text-emerald-700' : 'text-slate-500'}`}>
+    <li className={`flex items-center gap-1.5 text-xs ${met ? 'text-ok' : 'text-muted'}`}>
       <Check className={`h-3.5 w-3.5 ${met ? '' : 'opacity-30'}`} aria-hidden="true" />
       {children}
       <span className="sr-only">{met ? '(done)' : '(not yet)'}</span>

@@ -40,7 +40,7 @@ export default function CommentSection({ comments, target, onAdded }) {
     <Card>
       <CardHeader title={`Comments (${comments.length})`} icon={MessageSquare} />
       {comments.length === 0 ? (
-        <p className="px-4 py-5 text-sm text-slate-500">No comments yet. Start the conversation below.</p>
+        <p className="px-4 py-5 text-sm text-muted">No comments yet. Start the conversation below.</p>
       ) : (
         <ul className="space-y-4 px-4 py-4">
           {comments.map((comment) => (
@@ -48,12 +48,12 @@ export default function CommentSection({ comments, target, onAdded }) {
               <Avatar name={comment.user.name} size="sm" />
               <div className="min-w-0 flex-1">
                 <p className="text-sm">
-                  <span className="font-medium text-navy">{comment.user.name}</span>
-                  <time dateTime={comment.createdAt} title={formatDateTime(comment.createdAt)} className="ml-2 text-xs text-slate-500">
+                  <span className="font-medium text-ink">{comment.user.name}</span>
+                  <time dateTime={comment.createdAt} title={formatDateTime(comment.createdAt)} className="ml-2 text-xs text-muted">
                     {formatTimeAgo(comment.createdAt)}
                   </time>
                 </p>
-                <p className="mt-1 rounded-lg rounded-tl-sm bg-slate-50 px-3 py-2 text-sm leading-relaxed whitespace-pre-line text-slate-700">
+                <p className="mt-1 rounded-lg rounded-tl-sm bg-sunken px-3 py-2 text-sm leading-relaxed whitespace-pre-line text-ink-2">
                   {comment.content}
                 </p>
               </div>
@@ -61,7 +61,7 @@ export default function CommentSection({ comments, target, onAdded }) {
           ))}
         </ul>
       )}
-      <form onSubmit={handleSubmit} className="flex gap-3 border-t border-slate-200 p-4">
+      <form onSubmit={handleSubmit} className="flex gap-3 border-t border-line p-4">
         <Avatar name={user.name} size="sm" />
         <div className="min-w-0 flex-1 space-y-2">
           <label htmlFor="comment" className="sr-only">
@@ -81,7 +81,7 @@ export default function CommentSection({ comments, target, onAdded }) {
           />
           <ErrorMessage message={error} />
           <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-slate-500 tabular-nums">
+            <span className="text-xs text-muted tabular-nums">
               {content.length > 0 && `${content.length}/${MAX_LENGTH}`}
             </span>
             <Button type="submit" size="sm" loading={saving}>

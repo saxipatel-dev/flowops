@@ -23,31 +23,31 @@ import ActivityList from '../components/ActivityList.jsx';
 import { EmptyState, ErrorMessage, Loading } from '../components/Feedback.jsx';
 
 const taskSegments = [
-  { key: 'TODO', stroke: 'stroke-slate-400', dot: 'bg-slate-400' },
-  { key: 'IN_PROGRESS', stroke: 'stroke-blue-500', dot: 'bg-blue-500' },
-  { key: 'COMPLETED', stroke: 'stroke-emerald-500', dot: 'bg-emerald-500' },
+  { key: 'TODO', stroke: 'stroke-faint', dot: 'bg-faint' },
+  { key: 'IN_PROGRESS', stroke: 'stroke-info', dot: 'bg-info' },
+  { key: 'COMPLETED', stroke: 'stroke-ok', dot: 'bg-ok' },
 ];
 
 const requestSegments = [
-  { key: 'PENDING', stroke: 'stroke-amber-400', dot: 'bg-amber-400' },
-  { key: 'APPROVED', stroke: 'stroke-emerald-500', dot: 'bg-emerald-500' },
-  { key: 'REJECTED', stroke: 'stroke-red-400', dot: 'bg-red-400' },
+  { key: 'PENDING', stroke: 'stroke-warn', dot: 'bg-warn' },
+  { key: 'APPROVED', stroke: 'stroke-ok', dot: 'bg-ok' },
+  { key: 'REJECTED', stroke: 'stroke-bad', dot: 'bg-bad' },
 ];
 
 function dueTone(task) {
-  if (isOverdue(task)) return 'text-red-700';
-  if (formatDueLabel(task.dueDate) === 'Due today') return 'text-amber-700';
-  return 'text-slate-500';
+  if (isOverdue(task)) return 'text-bad';
+  if (formatDueLabel(task.dueDate) === 'Due today') return 'text-warn';
+  return 'text-muted';
 }
 
 function DeadlineItem({ task, showAssignee }) {
   return (
-    <li className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-slate-50">
+    <li className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-sunken">
       <div className="min-w-0 flex-1">
-        <Link to={`/tasks/${task.id}`} className="block truncate text-sm font-medium text-navy hover:text-brand">
+        <Link to={`/tasks/${task.id}`} className="block truncate text-sm font-medium text-ink hover:text-accent">
           {task.title}
         </Link>
-        <p className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
+        <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted">
           {showAssignee && (
             <>
               <Avatar name={task.assignee.name} size="xs" />
@@ -171,7 +171,7 @@ export default function DashboardPage() {
           {upcomingDeadlines.length === 0 ? (
             <EmptyState icon={CalendarCheck} title="No upcoming deadlines" message="Nothing is due in the next two weeks." />
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-line-soft">
               {upcomingDeadlines.map((task) => (
                 <DeadlineItem key={task.id} task={task} showAssignee={isTeamView} />
               ))}

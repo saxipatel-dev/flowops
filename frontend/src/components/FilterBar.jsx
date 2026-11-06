@@ -24,7 +24,7 @@ export default function FilterBar({ searchValue = '', onSearch, filters, values,
   const hasActiveFilters = Boolean(searchValue) || filters.some((filter) => values[filter.name]);
 
   return (
-    <div className="flex flex-col gap-2.5 border-b border-slate-200 p-3 md:flex-row md:items-center">
+    <div className="flex flex-col gap-2.5 border-b border-line p-3 md:flex-row md:items-center">
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -36,7 +36,7 @@ export default function FilterBar({ searchValue = '', onSearch, filters, values,
         <label htmlFor="search" className="sr-only">
           Search
         </label>
-        <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+        <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-faint" aria-hidden="true" />
         <input
           id="search"
           type="search"
@@ -64,7 +64,7 @@ export default function FilterBar({ searchValue = '', onSearch, filters, values,
       </div>
       {(resultLabel || hasActiveFilters) && (
         <div className="flex items-center justify-between gap-2 md:justify-end">
-          {resultLabel && <span className="text-xs whitespace-nowrap text-slate-500 tabular-nums" aria-live="polite">{resultLabel}</span>}
+          {resultLabel && <span className="text-xs whitespace-nowrap text-muted tabular-nums" aria-live="polite">{resultLabel}</span>}
           {hasActiveFilters && (
             <Button variant="ghost" size="sm" icon={X} onClick={onClear}>
               Clear

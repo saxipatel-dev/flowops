@@ -64,7 +64,7 @@ export default function DecisionForm({ request, onDecided }) {
   }
 
   return (
-    <Card className="ring-2 ring-brand/15">
+    <Card className="ring-2 ring-accent/25">
       <CardHeader title="Review this request" description="Your decision is shared with the requester." icon={ClipboardCheck} />
       <div className="space-y-4 p-4">
         <ErrorMessage message={error} />
@@ -73,8 +73,8 @@ export default function DecisionForm({ request, onDecided }) {
         </FormField>
 
         {needsFollowUp && (
-          <div className="rounded-lg border border-slate-200 bg-surface-muted p-4">
-            <p className="mb-3 text-sm text-slate-600">Approving creates a follow-up task to fulfil this request.</p>
+          <div className="rounded-lg border border-line bg-sunken p-4">
+            <p className="mb-3 text-sm text-muted">Approving creates a follow-up task to fulfil this request.</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField label="Assign task to" htmlFor="assigneeId">
                 <SelectInput id="assigneeId" options={assignees} placeholder="Myself" value={assigneeId} onChange={(event) => setAssigneeId(event.target.value)} />

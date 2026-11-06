@@ -105,17 +105,40 @@ test('navigation works on a phone-sized screen', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await login(page, 'priya@flowops.test');
 
-  const menuButton = page.getByRole('button', { name: 'Open navigation' });
-  await menuButton.click();
-  await expect(page.getByRole('button', { name: 'Close navigation' })).toBeFocused();
+  // Pages that are not in the tab bar live in the More menu.
+  const moreButton = page.getByRole('button', { name: 'More' });
+  await moreButton.click();
+  await expect(page.getByRole('button', { name: 'Close menu' })).toBeFocused();
   await page.keyboard.press('Escape');
-  await expect(menuButton).toBeFocused();
+  await expect(moreButton).toBeFocused();
 
-  await menuButton.click();
+  await moreButton.click();
+  await page.getByRole('dialog').getByRole('link', { name: 'Approvals' }).click();
+  await expect(page).toHaveURL(/\/approvals/);
+
   await page.getByRole('link', { name: 'Requests', exact: true }).click();
   await expect(page).toHaveURL(/\/requests/);
   await page.getByRole('tab', { name: 'Team requests' }).click();
   // Lists switch to cards instead of a squeezed table.
   await expect(page.getByRole('table')).toBeHidden();
   await expect(page.getByRole('list', { name: 'Requests' })).toBeVisible();
+});
+
+test('the command palette finds only records the user can open', async ({ page }) => {
+  await login(page, 'priya@flowops.test');
+  await page.getByRole('button', { name: 'Search and jump to' }).waitFor();
+  await page.keyboard.press('ControlOrMeta+k');
+  const search = page.getByRole('combobox', { name: 'Search' });
+  await expect(search).toBeFocused();
+  await search.fill('laptops');
+  await page.getByRole('option', { name: /Set up laptops for new hires/ }).click();
+  await expect(page).toHaveURL(/\/tasks\/\d+$/);
+  await expect(page.getByRole('heading', { name: 'Set up laptops for new hires' })).toBeVisible();
+
+  // An employee in another department gets no result for the same search.
+  await logout(page);
+  await login(page, 'maya@flowops.test');
+  await page.getByRole('button', { name: 'Search and jump to' }).click();
+  await page.getByRole('combobox', { name: 'Search' }).fill('laptops');
+  await expect(page.getByText('No tasks or requests match “laptops”.')).toBeVisible();
 });

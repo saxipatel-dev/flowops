@@ -15,10 +15,10 @@ import { EmptyState, ErrorMessage, Loading } from '../components/Feedback.jsx';
 import { buttonClasses } from '../components/Button.jsx';
 
 function DueDate({ task }) {
-  if (!task.dueDate) return <span className="text-slate-400">No due date</span>;
+  if (!task.dueDate) return <span className="text-faint">No due date</span>;
   const overdue = isOverdue(task);
   return (
-    <span className={`inline-flex items-center gap-1 whitespace-nowrap ${overdue ? 'font-medium text-red-700' : ''}`}>
+    <span className={`inline-flex items-center gap-1 whitespace-nowrap ${overdue ? 'font-medium text-bad' : ''}`}>
       {overdue && <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />}
       {formatDate(task.dueDate)}
       {overdue && <span className="sr-only">(overdue)</span>}
@@ -27,7 +27,7 @@ function DueDate({ task }) {
 }
 
 const TaskTitle = ({ task }) => (
-  <Link to={`/tasks/${task.id}`} className="font-medium text-navy transition-colors hover:text-brand">
+  <Link to={`/tasks/${task.id}`} className="font-medium text-ink transition-colors hover:text-accent">
     {task.title}
   </Link>
 );
@@ -47,7 +47,7 @@ function TaskCard({ task }) {
         <TaskTitle task={task} />
         <Badge value={task.status} />
       </div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-500">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted">
         <UserLabel name={task.assignee.name} size="xs" />
         <DueDate task={task} />
         <Badge value={task.priority} />

@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router';
 import Badge from '../components/Badge.jsx';
 import Pagination from '../components/Pagination.jsx';
 import LoginPage from '../pages/LoginPage.jsx';
-import Sidebar from '../components/Sidebar.jsx';
+import IconRail from '../components/shell/IconRail.jsx';
 import StatusChart from '../components/StatusChart.jsx';
 import { getTimelineSteps } from '../components/ApprovalTimeline.jsx';
 import FilterBar from '../components/FilterBar.jsx';
@@ -87,11 +87,11 @@ describe('LoginPage', () => {
   });
 });
 
-describe('Sidebar', () => {
-  // The app only renders the sidebar after the user has loaded.
+describe('IconRail', () => {
+  // The app only renders the navigation after the user has loaded.
   function LoadedSidebar() {
     const { user } = useAuth();
-    return user ? <Sidebar open={false} onClose={() => {}} onLogout={() => {}} /> : null;
+    return user ? <IconRail onLogout={() => {}} /> : null;
   }
 
   function renderSidebar(role) {

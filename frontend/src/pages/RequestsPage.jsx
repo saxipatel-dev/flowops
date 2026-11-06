@@ -16,10 +16,10 @@ import { buttonClasses } from '../components/Button.jsx';
 
 const RequestTitle = ({ request }) => (
   <div className="min-w-0">
-    <Link to={`/requests/${request.id}`} className="font-medium text-navy transition-colors hover:text-brand">
+    <Link to={`/requests/${request.id}`} className="font-medium text-ink transition-colors hover:text-accent">
       {request.title}
     </Link>
-    <p className="mt-0.5 text-xs text-slate-500 tabular-nums">{requestCode(request.id)}</p>
+    <p className="mt-0.5 font-mono text-[11px] text-faint">{requestCode(request.id)}</p>
   </div>
 );
 
@@ -52,7 +52,7 @@ function RequestCard({ request, showRequester }) {
         <RequestTitle request={request} />
         <Badge value={request.status} />
       </div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-500">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted">
         {showRequester && <UserLabel name={request.requester.name} size="xs" />}
         <span>{categoryLabels[request.category]}</span>
         {request.estimatedCost !== null && <span className="tabular-nums">{formatCurrency(request.estimatedCost)}</span>}

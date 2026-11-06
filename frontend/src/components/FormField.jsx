@@ -4,19 +4,19 @@ import { AlertCircle } from 'lucide-react';
 export function FormField({ label, htmlFor, error, hint, required, children }) {
   return (
     <div>
-      <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium text-slate-800">
+      <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium text-ink">
         {label}
         {required && (
-          <span className="text-red-600" aria-hidden="true">
+          <span className="text-bad" aria-hidden="true">
             {' '}
             *
           </span>
         )}
       </label>
       {children}
-      {hint && !error && <p className="mt-1.5 text-xs text-slate-500">{hint}</p>}
+      {hint && !error && <p className="mt-1.5 text-xs text-muted">{hint}</p>}
       {error && (
-        <p id={`${htmlFor}-error`} className="mt-1.5 flex items-center gap-1 text-xs font-medium text-red-600">
+        <p id={`${htmlFor}-error`} className="mt-1.5 flex items-center gap-1 text-xs font-medium text-bad">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           {error}
         </p>

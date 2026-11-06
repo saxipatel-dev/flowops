@@ -21,10 +21,10 @@ function NotificationItem({ notification, onRead }) {
   const unread = !notification.isRead;
 
   return (
-    <li className={`group relative flex items-start gap-3 px-4 py-3 transition-colors ${unread ? 'bg-brand-soft/40' : 'hover:bg-slate-50/80'}`}>
-      {unread && <span className="absolute inset-y-0 left-0 w-0.5 bg-brand" aria-hidden="true" />}
+    <li className={`group relative flex items-start gap-3 px-4 py-3 transition-colors ${unread ? 'bg-accent-soft' : 'hover:bg-sunken'}`}>
+      {unread && <span className="absolute inset-y-0 left-0 w-0.5 bg-accent-strong" aria-hidden="true" />}
       <span
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${unread ? 'bg-white text-brand ring-1 ring-brand/20' : 'bg-slate-100 text-slate-500'}`}
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${unread ? 'bg-surface text-accent ring-1 ring-accent/30' : 'bg-hover text-muted'}`}
         aria-hidden="true"
       >
         <Icon className="h-4 w-4" />
@@ -35,14 +35,14 @@ function NotificationItem({ notification, onRead }) {
           <Link
             to={notification.link}
             onClick={() => onRead(notification)}
-            className={`text-sm hover:text-brand hover:underline ${unread ? 'font-medium text-navy' : 'text-slate-700'}`}
+            className={`text-sm hover:text-accent hover:underline ${unread ? 'font-medium text-ink' : 'text-ink-2'}`}
           >
             {notification.message}
           </Link>
         ) : (
-          <p className={`text-sm ${unread ? 'font-medium text-navy' : 'text-slate-700'}`}>{notification.message}</p>
+          <p className={`text-sm ${unread ? 'font-medium text-ink' : 'text-ink-2'}`}>{notification.message}</p>
         )}
-        <time dateTime={notification.createdAt} title={formatDateTime(notification.createdAt)} className="mt-0.5 block text-xs text-slate-500">
+        <time dateTime={notification.createdAt} title={formatDateTime(notification.createdAt)} className="mt-0.5 block text-xs text-muted">
           {formatTimeAgo(notification.createdAt)}
         </time>
       </div>
@@ -101,8 +101,8 @@ export default function NotificationsPage() {
       <div className={`transition-opacity ${loading ? 'opacity-60' : ''}`}>
         {groupByDay(data.notifications).map((group) => (
           <section key={group.key} aria-label={group.label}>
-            <h2 className="border-b border-slate-100 bg-surface-muted px-4 py-1.5 text-xs font-medium text-slate-500">{group.label}</h2>
-            <ul className="divide-y divide-slate-100">
+            <h2 className="border-b border-line-soft bg-sunken px-4 py-1.5 text-xs font-medium text-muted">{group.label}</h2>
+            <ul className="divide-y divide-line-soft">
               {group.items.map((notification) => (
                 <NotificationItem key={notification.id} notification={notification} onRead={markRead} />
               ))}

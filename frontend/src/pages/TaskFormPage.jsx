@@ -114,7 +114,7 @@ export default function TaskFormPage() {
           </FormField>
         </div>
         </div>
-        <div className="flex justify-end gap-2 rounded-b-xl border-t border-slate-200 bg-surface-muted px-5 py-3">
+        <div className="flex justify-end gap-2 rounded-b-xl border-t border-line bg-sunken px-5 py-3">
           <Link to={isEditing ? `/tasks/${id}` : '/tasks'} className={buttonClasses('secondary')}>
             Cancel
           </Link>

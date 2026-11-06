@@ -69,7 +69,7 @@ export default function UserForm({ user, departments, onSaved, onCancel }) {
   const departmentOptions = departments.map((department) => ({ value: String(department.id), label: department.name }));
 
   return (
-    <Card as="form" onSubmit={handleSubmit} noValidate className="ring-2 ring-brand/15">
+    <Card as="form" onSubmit={handleSubmit} noValidate className="ring-2 ring-accent/25">
       <CardHeader
         title={isEditing ? `Edit ${user.name}` : 'Add a new user'}
         description={isEditing ? 'Changes take effect the next time they load a page.' : 'They can sign in with the temporary password and change it from their profile.'}
@@ -95,8 +95,8 @@ export default function UserForm({ user, departments, onSaved, onCancel }) {
           </FormField>
           {isEditing ? (
             <div className="flex items-end">
-              <label className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-lg border border-slate-200 bg-surface-muted px-3 text-sm text-slate-700">
-                <input type="checkbox" name="isActive" checked={form.isActive} onChange={handleChange} className="h-4 w-4 rounded border-slate-300 accent-brand" />
+              <label className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-lg border border-line bg-sunken px-3 text-sm text-ink-2">
+                <input type="checkbox" name="isActive" checked={form.isActive} onChange={handleChange} className="h-4 w-4 rounded border-line-strong accent-brand" />
                 Account is active
               </label>
             </div>
@@ -107,7 +107,7 @@ export default function UserForm({ user, departments, onSaved, onCancel }) {
           )}
         </div>
       </div>
-      <div className="flex justify-end gap-2 rounded-b-xl border-t border-slate-200 bg-surface-muted px-4 py-3">
+      <div className="flex justify-end gap-2 rounded-b-xl border-t border-line bg-sunken px-4 py-3">
         <Button variant="secondary" onClick={onCancel}>
           Cancel
         </Button>

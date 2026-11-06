@@ -1,12 +1,13 @@
+// Light pastel discs with dark initials stay readable on every dark surface.
 const palette = [
-  'bg-indigo-100 text-indigo-700',
-  'bg-sky-100 text-sky-700',
-  'bg-emerald-100 text-emerald-700',
-  'bg-amber-100 text-amber-800',
-  'bg-rose-100 text-rose-700',
-  'bg-violet-100 text-violet-700',
-  'bg-teal-100 text-teal-700',
-];
+  'bg-[#b9b0ff] text-[#151233]',
+  'bg-[#9ccfff] text-[#0d2236]',
+  'bg-[#7fe3c8] text-[#0b2a22]',
+  'bg-[#f7cf8a] text-[#33230a]',
+  'bg-[#f0a3b5] text-[#3a1420]',
+  'bg-[#c9b8ff] text-[#1d1440]',
+  'bg-[#8fe0e0] text-[#0b2b2b]',
+]
 
 const sizes = {
   xs: 'h-5 w-5 text-[10px]',

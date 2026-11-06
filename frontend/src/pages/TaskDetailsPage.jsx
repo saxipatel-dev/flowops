@@ -110,15 +110,25 @@ export default function TaskDetailsPage() {
             <DetailItem label="Due date">
               {task.dueDate ? (
                 <>
-                  <span className={overdue ? 'font-medium text-red-700' : ''}>{formatDate(task.dueDate)}</span>
+                  <span className={overdue ? 'font-medium text-bad' : ''}>{formatDate(task.dueDate)}</span>
                   {task.status !== 'COMPLETED' && (
-                    <span className={`block text-xs ${overdue ? 'text-red-700' : 'text-slate-500'}`}>{formatDueLabel(task.dueDate)}</span>
+                    <span className={`block text-xs ${overdue ? 'text-bad' : 'text-muted'}`}>{formatDueLabel(task.dueDate)}</span>
                   )}
                 </>
               ) : (
-                <span className="text-slate-400">No due date</span>
+                <span className="text-faint">No due date</span>
               )}
             </DetailItem>
+            {task.status === 'COMPLETED' && (
+              <DetailItem label="Completed">
+                {task.completedAt ? (
+                  <span className="text-ok">{formatDateTime(task.completedAt)}</span>
+                ) : (
+                  // Tasks completed before completion times were recorded.
+                  <span className="text-faint">Time not recorded</span>
+                )}
+              </DetailItem>
+            )}
             <DetailItem label="Created by">
               <UserLabel name={task.creator.name} size="xs" />
             </DetailItem>
@@ -127,14 +137,14 @@ export default function TaskDetailsPage() {
                 <Link to={`/requests/${task.request.id}`} className="link">
                   {requestCode(task.request.id)}
                 </Link>
-                <span className="block truncate text-xs text-slate-500">{task.request.title}</span>
+                <span className="block truncate text-xs text-muted">{task.request.title}</span>
               </DetailItem>
             )}
           </DetailList>
 
           {permissions.canUpdateStatus && (
-            <div className="border-t border-slate-200 bg-surface-muted px-4 py-3">
-              <label htmlFor="task-status" className="mb-1.5 block text-sm font-medium text-slate-800">
+            <div className="border-t border-line bg-sunken px-4 py-3">
+              <label htmlFor="task-status" className="mb-1.5 block text-sm font-medium text-ink">
                 Update status
               </label>
               <div className="flex gap-2">
@@ -150,8 +160,8 @@ export default function TaskDetailsPage() {
         <div className="space-y-4 lg:col-span-2 lg:col-start-1 lg:row-span-2 lg:row-start-1">
           <Card>
             <CardHeader title="Description" icon={FileText} />
-            <p className="px-4 py-3.5 text-sm leading-relaxed whitespace-pre-line text-slate-700">
-              {task.description || <span className="text-slate-400">No description provided.</span>}
+            <p className="px-4 py-3.5 text-sm leading-relaxed whitespace-pre-line text-ink-2">
+              {task.description || <span className="text-faint">No description provided.</span>}
             </p>
           </Card>
           <CommentSection comments={task.comments} target={{ taskId: task.id }} onAdded={reload} />

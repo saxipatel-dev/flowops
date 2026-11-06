@@ -16,8 +16,8 @@ function Person({ user }) {
     <div className="flex min-w-0 items-center gap-3">
       <Avatar name={user.name} />
       <div className="min-w-0">
-        <p className={`truncate font-medium ${user.isActive ? 'text-navy' : 'text-slate-500'}`}>{user.name}</p>
-        <p className="truncate text-xs text-slate-500">{user.jobTitle || 'No job title'}</p>
+        <p className={`truncate font-medium ${user.isActive ? 'text-ink' : 'text-muted'}`}>{user.name}</p>
+        <p className="truncate text-xs text-muted">{user.jobTitle || 'No job title'}</p>
       </div>
     </div>
   );
@@ -34,12 +34,12 @@ function EditButton({ user, onEdit }) {
 function getColumns(onEdit) {
   return [
     { key: 'name', header: 'Name', cell: (user) => <Person user={user} />, className: 'min-w-56' },
-    { key: 'email', header: 'Email', cell: (user) => <span className="text-slate-600">{user.email}</span> },
+    { key: 'email', header: 'Email', cell: (user) => <span className="text-muted">{user.email}</span> },
     { key: 'role', header: 'Role', cell: (user) => <Badge value={user.role} /> },
     {
       key: 'department',
       header: 'Department',
-      cell: (user) => user.department?.name || <span className="text-slate-400">—</span>,
+      cell: (user) => user.department?.name || <span className="text-faint">—</span>,
       className: 'whitespace-nowrap',
     },
     { key: 'status', header: 'Status', cell: (user) => <Badge value={user.isActive ? 'ACTIVE' : 'INACTIVE'} /> },
@@ -59,8 +59,8 @@ function UserCard({ user, onEdit }) {
         <Person user={user} />
         <EditButton user={user} onEdit={onEdit} />
       </div>
-      <p className="truncate pl-11 text-xs text-slate-500">{user.email}</p>
-      <div className="flex flex-wrap items-center gap-2 pl-11 text-xs text-slate-500">
+      <p className="truncate pl-11 text-xs text-muted">{user.email}</p>
+      <div className="flex flex-wrap items-center gap-2 pl-11 text-xs text-muted">
         <Badge value={user.role} />
         <Badge value={user.isActive ? 'ACTIVE' : 'INACTIVE'} />
         {user.department && <span>{user.department.name}</span>}

@@ -24,7 +24,7 @@ export default function DataTable({ columns, rows, getKey = (row) => row.id, ren
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={getKey(row)} className="hover:bg-slate-50/80">
+              <tr key={getKey(row)} className="hover:bg-sunken">
                 {columns.map((column) => (
                   <td key={column.key} className={column.className}>
                     {column.cell(row)}
@@ -36,7 +36,7 @@ export default function DataTable({ columns, rows, getKey = (row) => row.id, ren
         </table>
       </div>
 
-      <ul className={`divide-y divide-slate-100 ${layout.cards}`} aria-label={label}>
+      <ul className={`divide-y divide-line-soft ${layout.cards}`} aria-label={label}>
         {rows.map((row) => (
           <li key={getKey(row)} className="px-4 py-3">
             {renderCard(row)}

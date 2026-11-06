@@ -119,7 +119,12 @@ export async function createTask(req, res) {
 
   const task = await prisma.$transaction(async (tx) => {
     const created = await tx.task.create({
-      data: { ...data, dueDate: data.dueDate ?? null, createdBy: req.user.id },
+      data: {
+        ...data,
+        dueDate: data.dueDate ?? null,
+        createdBy: req.user.id,
+        completedAt: data.status === 'COMPLETED' ? new Date() : null,
+      },
       include: taskListInclude,
     });
 
@@ -185,6 +190,10 @@ export async function updateTask(req, res) {
     throw badRequest('Due date cannot be in the past.');
   }
   const statusChanged = data.status !== undefined;
+  if (statusChanged) {
+    // Record when the task was completed; reopening it clears the time.
+    data.completedAt = data.status === 'COMPLETED' ? new Date() : null;
+  }
 
   const updated = await prisma.$transaction(async (tx) => {
     const saved = await tx.task.update({

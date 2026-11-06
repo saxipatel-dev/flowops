@@ -84,6 +84,9 @@ model Task {
   createdBy   Int        @map("created_by")
   requestId   Int?       @unique @map("request_id")
   dueDate     DateTime?  @map("due_date")
+  // Set when the task moves to Completed and cleared if it is reopened.
+  // Tasks completed before this column existed keep it empty.
+  completedAt DateTime?  @map("completed_at")
   createdAt   DateTime   @default(now()) @map("created_at")
   updatedAt   DateTime   @updatedAt @map("updated_at")
 

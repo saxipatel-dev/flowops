@@ -95,7 +95,7 @@ export async function getRequest(req, res) {
     where: { id },
     include: {
       ...requestInclude,
-      task: { select: { id: true, title: true, status: true, assignee: { select: userSummary } } },
+      task: { select: { id: true, title: true, status: true, completedAt: true, assignee: { select: userSummary } } },
       comments: { include: { user: { select: userSummary } }, orderBy: { createdAt: 'asc' } },
     },
   });

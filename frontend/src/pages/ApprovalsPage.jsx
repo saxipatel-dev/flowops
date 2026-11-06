@@ -24,17 +24,17 @@ function PendingList() {
 
   return (
     <div className={`transition-opacity ${loading ? 'opacity-60' : ''}`}>
-      <ul className="divide-y divide-slate-100">
+      <ul className="divide-y divide-line-soft">
         {data.requests.map((request) => (
-          <li key={request.id} className="flex flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-slate-50/80 sm:flex-row sm:items-center">
+          <li key={request.id} className="flex flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-sunken sm:flex-row sm:items-center">
             <div className="flex min-w-0 flex-1 items-start gap-3">
               <Avatar name={request.requester.name} />
               <div className="min-w-0">
                 <p className="text-sm">
-                  <span className="font-medium text-navy">{request.title}</span>
-                  <span className="ml-2 text-xs whitespace-nowrap text-slate-500 tabular-nums">{requestCode(request.id)}</span>
+                  <span className="font-medium text-ink">{request.title}</span>
+                  <span className="ml-2 font-mono text-[11px] whitespace-nowrap text-faint">{requestCode(request.id)}</span>
                 </p>
-                <p className="mt-0.5 text-xs text-slate-500">
+                <p className="mt-0.5 text-xs text-muted">
                   {request.requester.name} · {categoryLabels[request.category]}
                   {request.estimatedCost !== null && <> · <span className="tabular-nums">{formatCurrency(request.estimatedCost)}</span></>} ·
                   Submitted {formatDate(request.createdAt)}
@@ -60,7 +60,7 @@ const historyColumns = [
     key: 'request',
     header: 'Request',
     cell: (request) => (
-      <Link to={`/requests/${request.id}`} className="font-medium text-navy transition-colors hover:text-brand">
+      <Link to={`/requests/${request.id}`} className="font-medium text-ink transition-colors hover:text-accent">
         {request.title}
       </Link>
     ),
@@ -73,7 +73,7 @@ const historyColumns = [
     key: 'comment',
     header: 'Comment',
     cell: (request) => (
-      <span className="block max-w-xs truncate text-slate-500" title={request.reviewComment || ''}>
+      <span className="block max-w-xs truncate text-muted" title={request.reviewComment || ''}>
         {request.reviewComment || '—'}
       </span>
     ),
@@ -84,15 +84,15 @@ function HistoryCard({ request }) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-start justify-between gap-3">
-        <Link to={`/requests/${request.id}`} className="font-medium text-navy hover:text-brand">
+        <Link to={`/requests/${request.id}`} className="font-medium text-ink hover:text-accent">
           {request.title}
         </Link>
         <Badge value={request.status} />
       </div>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-muted">
         {request.requester.name} · {formatDateTime(request.reviewedAt)}
       </p>
-      {request.reviewComment && <p className="line-clamp-2 text-xs text-slate-600">“{request.reviewComment}”</p>}
+      {request.reviewComment && <p className="line-clamp-2 text-xs text-muted">“{request.reviewComment}”</p>}
     </div>
   );
 }
@@ -104,8 +104,8 @@ function ReviewHistory() {
 
   return (
     <>
-      <div className="border-b border-slate-200 px-4 py-2.5">
-        <div className="inline-flex rounded-lg bg-slate-100 p-0.5" role="group" aria-label="Filter by decision">
+      <div className="border-b border-line px-4 py-2.5">
+        <div className="inline-flex rounded-lg bg-hover p-0.5" role="group" aria-label="Filter by decision">
           {['APPROVED', 'REJECTED'].map((value) => (
             <button
               key={value}
@@ -116,7 +116,7 @@ function ReviewHistory() {
                 setPage(1);
               }}
               className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
-                status === value ? 'bg-white text-navy shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                status === value ? 'bg-surface text-ink shadow-xs' : 'text-muted hover:text-ink'
               }`}
             >
               {value === 'APPROVED' ? 'Approved' : 'Rejected'}
