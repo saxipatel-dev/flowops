@@ -4,7 +4,7 @@ import { badRequest, conflict, forbidden, notFound } from '../utils/httpError.js
 import { userSummary } from '../utils/selects.js';
 import { getPage, PAGE_SIZE } from '../utils/pagination.js';
 import { parseId } from '../utils/parseId.js';
-import { canViewRequest, canAssignTo, getTeamUserIds } from '../services/accessService.js';
+import { canViewRequest, canAssignTo, getVisibleRequestFilter } from '../services/accessService.js';
 import { logActivity, notify } from '../services/activityService.js';
 
 const categories = ['EQUIPMENT', 'PURCHASE', 'IT_SUPPORT', 'GENERAL_OPERATIONS'];
@@ -68,15 +68,6 @@ async function findReviewer(user) {
     where: { role: 'MANAGER', isActive: true, id: { not: user.id } },
     orderBy: { id: 'asc' },
   });
-}
-
-async function getVisibleRequestFilter(user, scope) {
-  if (scope === 'review') return { reviewerId: user.id };
-  if (scope !== 'team' || user.role === 'EMPLOYEE') return { requestedBy: user.id };
-  if (user.role === 'ADMIN') return {};
-
-  const teamIds = await getTeamUserIds(user.id);
-  return { OR: [{ requestedBy: { in: [...teamIds, user.id] } }, { reviewerId: user.id }] };
 }
 
 export async function listRequests(req, res) {

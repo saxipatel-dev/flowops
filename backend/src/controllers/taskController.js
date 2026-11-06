@@ -5,7 +5,7 @@ import { userSummary } from '../utils/selects.js';
 import { getPage, PAGE_SIZE } from '../utils/pagination.js';
 import { parseId } from '../utils/parseId.js';
 import { taskStatusLabels } from '../utils/labels.js';
-import { canViewTask, canManageTask, canAssignTo, getTeamUserIds } from '../services/accessService.js';
+import { canViewTask, canManageTask, canAssignTo, getVisibleTaskFilter } from '../services/accessService.js';
 import { logActivity, notify } from '../services/activityService.js';
 
 const statuses = ['TODO', 'IN_PROGRESS', 'COMPLETED'];
@@ -42,18 +42,6 @@ const taskListInclude = {
 function isPastDate(date) {
   const today = new Date(new Date().toISOString().slice(0, 10));
   return date < today;
-}
-
-async function getVisibleTaskFilter(user, scope) {
-  if (scope === 'mine' || user.role === 'EMPLOYEE') {
-    return scope === 'mine'
-      ? { assignedTo: user.id }
-      : { OR: [{ assignedTo: user.id }, { createdBy: user.id }] };
-  }
-  if (user.role === 'ADMIN') return {};
-
-  const teamIds = await getTeamUserIds(user.id);
-  return { OR: [{ assignedTo: { in: [...teamIds, user.id] } }, { createdBy: user.id }] };
 }
 
 async function loadTask(user, id) {

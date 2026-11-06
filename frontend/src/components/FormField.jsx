@@ -1,15 +1,23 @@
+import { AlertCircle } from 'lucide-react';
+
 // Wraps a label, an input element, and an optional validation message.
 export function FormField({ label, htmlFor, error, hint, required, children }) {
   return (
     <div>
-      <label htmlFor={htmlFor} className="mb-1 block text-sm font-medium text-slate-700">
+      <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium text-slate-800">
         {label}
-        {required && <span className="text-red-600"> *</span>}
+        {required && (
+          <span className="text-red-600" aria-hidden="true">
+            {' '}
+            *
+          </span>
+        )}
       </label>
       {children}
-      {hint && !error && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+      {hint && !error && <p className="mt-1.5 text-xs text-slate-500">{hint}</p>}
       {error && (
-        <p id={`${htmlFor}-error`} className="mt-1 text-xs text-red-600">
+        <p id={`${htmlFor}-error`} className="mt-1.5 flex items-center gap-1 text-xs font-medium text-red-600">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           {error}
         </p>
       )}

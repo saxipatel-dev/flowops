@@ -16,7 +16,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const url = error.config?.url || '';
-    if (error.response?.status === 401 && !url.startsWith('/auth/')) {
+    // A failed login is a normal 401, not an expired session.
+    if (error.response?.status === 401 && url !== '/auth/login') {
       handleUnauthorized();
     }
     return Promise.reject(error);

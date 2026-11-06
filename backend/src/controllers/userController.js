@@ -5,6 +5,7 @@ import { badRequest, notFound } from '../utils/httpError.js';
 import { userDetails, userSummary } from '../utils/selects.js';
 import { logActivity } from '../services/activityService.js';
 import { parseId } from '../utils/parseId.js';
+import { endUserSessions } from '../services/sessionService.js';
 
 const roles = ['EMPLOYEE', 'MANAGER', 'ADMIN'];
 
@@ -108,6 +109,9 @@ export async function updateUser(req, res) {
     },
     select: userDetails,
   });
+
+  // A deactivated account is signed out everywhere straight away.
+  if (existing.isActive && !user.isActive) await endUserSessions(user.id);
 
   const changes = [];
   if (existing.role !== user.role) changes.push(`role changed to ${user.role.toLowerCase()}`);

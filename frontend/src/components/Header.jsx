@@ -1,59 +1,98 @@
 import { useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { Link, useLocation } from 'react-router';
+import { Bell, ChevronRight, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { roleLabels } from '../services/format.js';
+import Avatar from './Avatar.jsx';
 
-export default function Header({ onMenuClick }) {
-  const { user, logout, unreadCount, refreshUnreadCount } = useAuth();
+const sectionLabels = {
+  dashboard: 'Dashboard',
+  tasks: 'Tasks',
+  requests: 'Requests',
+  approvals: 'Approvals',
+  activity: 'Activity',
+  notifications: 'Notifications',
+  profile: 'Profile',
+  users: 'User Management',
+};
+
+// Turns "/tasks/12/edit" into [Tasks, Edit] for the breadcrumb.
+function getBreadcrumb(pathname) {
+  const [section, id, action] = pathname.split('/').filter(Boolean);
+  const crumbs = [{ label: sectionLabels[section] || 'Page not found', to: `/${section}` }];
+  if (id === 'new') crumbs.push({ label: 'New' });
+  else if (action === 'edit') crumbs.push({ label: 'Edit' });
+  else if (id) crumbs.push({ label: 'Details' });
+  return crumbs;
+}
+
+export default function Header({ onMenuClick, menuButtonRef }) {
+  const { user, unreadCount, refreshUnreadCount } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
+  const crumbs = getBreadcrumb(location.pathname);
 
   // Notifications are refreshed whenever the user moves to another page.
   useEffect(() => {
     refreshUnreadCount();
   }, [location.pathname, refreshUnreadCount]);
 
-  async function handleLogout() {
-    await logout();
-    navigate('/login');
-  }
-
   return (
-    <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6">
+    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur sm:px-6">
       <button
+        ref={menuButtonRef}
         type="button"
-        className="rounded-md p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
+        className="-ml-1.5 rounded-md p-1.5 text-slate-600 hover:bg-slate-100 lg:hidden"
         onClick={onMenuClick}
         aria-label="Open navigation"
       >
-        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path d="M3 5h14v2H3zm0 4h14v2H3zm0 4h14v2H3z" />
-        </svg>
+        <Menu className="h-5 w-5" aria-hidden="true" />
       </button>
-      <div className="hidden text-sm text-slate-500 lg:block">{user.department?.name || 'FlowOps'}</div>
 
-      <div className="flex items-center gap-4">
+      <nav aria-label="Breadcrumb" className="min-w-0 flex-1">
+        <ol className="flex items-center gap-1.5 text-sm">
+          {crumbs.map((crumb, index) => {
+            const isLast = index === crumbs.length - 1;
+            return (
+              <li key={crumb.label} className="flex min-w-0 items-center gap-1.5">
+                {index > 0 && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />}
+                {isLast ? (
+                  <span className="truncate font-medium text-navy" aria-current="page">
+                    {crumb.label}
+                  </span>
+                ) : (
+                  <Link to={crumb.to} className="truncate text-slate-500 transition-colors hover:text-slate-800">
+                    {crumb.label}
+                  </Link>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
+
+      <div className="flex items-center gap-1 sm:gap-3">
         <Link
           to="/notifications"
-          className="relative rounded-md p-2 text-slate-600 hover:bg-slate-100"
+          className="relative rounded-md p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
           aria-label={`Notifications (${unreadCount} unread)`}
         >
-          <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path d="M10 2a6 6 0 0 0-6 6v3.6l-1.7 2.6A1 1 0 0 0 3.1 16h13.8a1 1 0 0 0 .8-1.8L16 11.6V8a6 6 0 0 0-6-6Zm0 18a3 3 0 0 0 2.8-2H7.2a3 3 0 0 0 2.8 2Z" />
-          </svg>
+          <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
           {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 min-w-5 rounded-full bg-red-600 px-1 text-center text-xs font-semibold text-white">
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </span>
+            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" aria-hidden="true" />
           )}
         </Link>
-        <div className="hidden text-right sm:block">
-          <p className="text-sm font-medium text-slate-800">{user.name}</p>
-          <p className="text-xs text-slate-500">{roleLabels[user.role]}</p>
-        </div>
-        <button type="button" onClick={handleLogout} className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100">
-          Log out
-        </button>
+        <span className="hidden h-5 w-px bg-slate-200 sm:block" aria-hidden="true" />
+        <Link
+          to="/profile"
+          className="flex items-center gap-2.5 rounded-lg p-1 transition-colors hover:bg-slate-100 sm:pr-2.5"
+          aria-label={`Your profile: ${user.name}, ${roleLabels[user.role]}`}
+        >
+          <Avatar name={user.name} size="sm" />
+          <span className="hidden text-left leading-tight sm:block">
+            <span className="block text-sm font-medium text-navy">{user.name}</span>
+            <span className="block text-xs text-slate-500">{roleLabels[user.role]}</span>
+          </span>
+        </Link>
       </div>
     </header>
   );

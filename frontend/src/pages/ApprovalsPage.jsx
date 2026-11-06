@@ -1,40 +1,49 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
+import { ClipboardCheck, History, Inbox } from 'lucide-react';
 import { useApi } from '../hooks/useApi.js';
 import { categoryLabels, formatCurrency, formatDate, formatDateTime, requestCode } from '../services/format.js';
 import PageHeader from '../components/PageHeader.jsx';
 import Badge from '../components/Badge.jsx';
+import Card, { CardHeader } from '../components/Card.jsx';
+import DataTable from '../components/DataTable.jsx';
 import Pagination from '../components/Pagination.jsx';
+import Avatar, { UserLabel } from '../components/Avatar.jsx';
 import { EmptyState, ErrorMessage, Loading } from '../components/Feedback.jsx';
+import { buttonClasses } from '../components/Button.jsx';
 
 function PendingList() {
   const [page, setPage] = useState(1);
   const { data, loading, error, reload } = useApi('/requests', { scope: 'review', status: 'PENDING', page });
 
-  if (loading) return <div className="px-4"><Loading /></div>;
   if (error) return <div className="p-4"><ErrorMessage message={error} onRetry={reload} /></div>;
+  if (!data) return <Loading />;
   if (data.requests.length === 0) {
-    return <EmptyState title="You're all caught up" message="There are no requests waiting for your review." />;
+    return <EmptyState icon={ClipboardCheck} title="You're all caught up" message="There are no requests waiting for your review." />;
   }
 
   return (
-    <>
+    <div className={`transition-opacity ${loading ? 'opacity-60' : ''}`}>
       <ul className="divide-y divide-slate-100">
         {data.requests.map((request) => (
-          <li key={request.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm">
-                <span className="mr-2 text-slate-500">{requestCode(request.id)}</span>
-                <span className="font-medium text-slate-900">{request.title}</span>
-              </p>
-              <p className="mt-1 text-sm text-slate-500">
-                Submitted by {request.requester.name} · {categoryLabels[request.category]} · {formatCurrency(request.estimatedCost)} ·{' '}
-                {formatDate(request.createdAt)}
-              </p>
+          <li key={request.id} className="flex flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-slate-50/80 sm:flex-row sm:items-center">
+            <div className="flex min-w-0 flex-1 items-start gap-3">
+              <Avatar name={request.requester.name} />
+              <div className="min-w-0">
+                <p className="text-sm">
+                  <span className="font-medium text-navy">{request.title}</span>
+                  <span className="ml-2 text-xs whitespace-nowrap text-slate-500 tabular-nums">{requestCode(request.id)}</span>
+                </p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  {request.requester.name} · {categoryLabels[request.category]}
+                  {request.estimatedCost !== null && <> · <span className="tabular-nums">{formatCurrency(request.estimatedCost)}</span></>} ·
+                  Submitted {formatDate(request.createdAt)}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-3 pl-11 sm:pl-0">
               <Badge value={request.priority} />
-              <Link to={`/requests/${request.id}`} className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-dark">
+              <Link to={`/requests/${request.id}`} className={buttonClasses('primary', 'sm')}>
                 Review
               </Link>
             </div>
@@ -42,7 +51,49 @@ function PendingList() {
         ))}
       </ul>
       <Pagination page={data.page} pageSize={data.pageSize} total={data.total} onChange={setPage} />
-    </>
+    </div>
+  );
+}
+
+const historyColumns = [
+  {
+    key: 'request',
+    header: 'Request',
+    cell: (request) => (
+      <Link to={`/requests/${request.id}`} className="font-medium text-navy transition-colors hover:text-brand">
+        {request.title}
+      </Link>
+    ),
+    className: 'min-w-48',
+  },
+  { key: 'requester', header: 'Requested by', cell: (request) => <UserLabel name={request.requester.name} />, className: 'whitespace-nowrap' },
+  { key: 'decision', header: 'Decision', cell: (request) => <Badge value={request.status} /> },
+  { key: 'reviewed', header: 'Reviewed', cell: (request) => formatDateTime(request.reviewedAt), className: 'whitespace-nowrap' },
+  {
+    key: 'comment',
+    header: 'Comment',
+    cell: (request) => (
+      <span className="block max-w-xs truncate text-slate-500" title={request.reviewComment || ''}>
+        {request.reviewComment || '—'}
+      </span>
+    ),
+  },
+];
+
+function HistoryCard({ request }) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-start justify-between gap-3">
+        <Link to={`/requests/${request.id}`} className="font-medium text-navy hover:text-brand">
+          {request.title}
+        </Link>
+        <Badge value={request.status} />
+      </div>
+      <p className="text-xs text-slate-500">
+        {request.requester.name} · {formatDateTime(request.reviewedAt)}
+      </p>
+      {request.reviewComment && <p className="line-clamp-2 text-xs text-slate-600">“{request.reviewComment}”</p>}
+    </div>
   );
 }
 
@@ -53,58 +104,45 @@ function ReviewHistory() {
 
   return (
     <>
-      <div className="flex gap-2 border-b border-slate-200 px-4 py-3">
-        {['APPROVED', 'REJECTED'].map((value) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => {
-              setStatus(value);
-              setPage(1);
-            }}
-            className={`rounded-md px-3 py-1 text-sm font-medium ${status === value ? 'bg-brand text-white' : 'text-slate-600 hover:bg-slate-100'}`}
-          >
-            {value === 'APPROVED' ? 'Approved' : 'Rejected'}
-          </button>
-        ))}
+      <div className="border-b border-slate-200 px-4 py-2.5">
+        <div className="inline-flex rounded-lg bg-slate-100 p-0.5" role="group" aria-label="Filter by decision">
+          {['APPROVED', 'REJECTED'].map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={status === value}
+              onClick={() => {
+                setStatus(value);
+                setPage(1);
+              }}
+              className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+                status === value ? 'bg-white text-navy shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              {value === 'APPROVED' ? 'Approved' : 'Rejected'}
+            </button>
+          ))}
+        </div>
       </div>
-      {loading && <div className="px-4"><Loading /></div>}
       {error && <div className="p-4"><ErrorMessage message={error} onRetry={reload} /></div>}
-      {!loading && !error && data.requests.length === 0 && <EmptyState title="No reviewed requests yet" />}
-      {!loading && !error && data.requests.length > 0 && (
+      {!error && !data && <Loading />}
+      {!error && data && data.requests.length === 0 && (
+        <EmptyState
+          icon={Inbox}
+          title={`No ${status === 'APPROVED' ? 'approved' : 'rejected'} requests yet`}
+          message="Requests you review will be listed here."
+        />
+      )}
+      {!error && data && data.requests.length > 0 && (
         <>
-          <div className="overflow-x-auto">
-            <table className="table-basic">
-              <thead>
-                <tr>
-                  <th>Request</th>
-                  <th>Requested by</th>
-                  <th>Decision</th>
-                  <th>Reviewed</th>
-                  <th>Comment</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {data.requests.map((request) => (
-                  <tr key={request.id}>
-                    <td>
-                      <Link to={`/requests/${request.id}`} className="link">
-                        {request.title}
-                      </Link>
-                    </td>
-                    <td className="whitespace-nowrap">{request.requester.name}</td>
-                    <td>
-                      <Badge value={request.status} />
-                    </td>
-                    <td className="whitespace-nowrap">{formatDateTime(request.reviewedAt)}</td>
-                    <td className="max-w-xs truncate text-slate-500" title={request.reviewComment || ''}>
-                      {request.reviewComment || '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            label="Review history"
+            columns={historyColumns}
+            rows={data.requests}
+            renderCard={(request) => <HistoryCard request={request} />}
+            busy={loading}
+            stackBelow="lg"
+          />
           <Pagination page={data.page} pageSize={data.pageSize} total={data.total} onChange={setPage} />
         </>
       )}
@@ -116,14 +154,14 @@ export default function ApprovalsPage() {
   return (
     <>
       <PageHeader title="Approvals" description="Requests from your team that are waiting for your decision." />
-      <section className="card">
-        <h2 className="border-b border-slate-200 px-4 py-3 font-semibold text-navy">Pending approvals</h2>
+      <Card className="overflow-hidden">
+        <CardHeader title="Pending approvals" icon={ClipboardCheck} />
         <PendingList />
-      </section>
-      <section className="card mt-6">
-        <h2 className="border-b border-slate-200 px-4 py-3 font-semibold text-navy">Review history</h2>
+      </Card>
+      <Card className="mt-4 overflow-hidden">
+        <CardHeader title="Review history" icon={History} />
         <ReviewHistory />
-      </section>
+      </Card>
     </>
   );
 }

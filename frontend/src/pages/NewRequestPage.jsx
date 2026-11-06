@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import api, { getErrorMessage, getFieldErrors } from '../services/api.js';
 import { categoryLabels, priorityLabels, toOptions } from '../services/format.js';
 import PageHeader from '../components/PageHeader.jsx';
-import Button from '../components/Button.jsx';
+import Button, { buttonClasses } from '../components/Button.jsx';
 import { FormField, SelectInput } from '../components/FormField.jsx';
 import { ErrorMessage } from '../components/Feedback.jsx';
 
@@ -54,7 +54,8 @@ export default function NewRequestPage() {
   return (
     <>
       <PageHeader title="New request" description="Your request will be sent to your department manager for review." />
-      <form onSubmit={handleSubmit} noValidate className="card max-w-2xl space-y-5 p-6">
+      <form onSubmit={handleSubmit} noValidate className="card max-w-2xl">
+        <div className="space-y-5 p-5">
         <ErrorMessage message={error} />
         <div className="grid gap-5 sm:grid-cols-2">
           <FormField label="Category" htmlFor="category" error={fieldErrors.category} required>
@@ -73,8 +74,9 @@ export default function NewRequestPage() {
         <FormField label="Estimated cost (USD)" htmlFor="estimatedCost" error={fieldErrors.estimatedCost} hint="Optional. Leave blank if there is no cost.">
           <input id="estimatedCost" name="estimatedCost" type="number" min="0" step="0.01" className={`input sm:max-w-48 ${fieldErrors.estimatedCost ? 'input-error' : ''}`} value={form.estimatedCost} onChange={handleChange} />
         </FormField>
-        <div className="flex justify-end gap-2">
-          <Link to="/requests" className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+        </div>
+        <div className="flex justify-end gap-2 rounded-b-xl border-t border-slate-200 bg-surface-muted px-5 py-3">
+          <Link to="/requests" className={buttonClasses('secondary')}>
             Cancel
           </Link>
           <Button type="submit" loading={saving}>

@@ -1,25 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
+import { FileText, History, Info, Pencil, Trash2 } from 'lucide-react';
 import api, { getErrorMessage } from '../services/api.js';
 import { useApi } from '../hooks/useApi.js';
-import { formatDate, formatDateTime, isOverdue, requestCode, taskStatusLabels, toOptions } from '../services/format.js';
+import { formatDate, formatDateTime, formatDueLabel, isOverdue, requestCode, taskStatusLabels, toOptions } from '../services/format.js';
 import PageHeader from '../components/PageHeader.jsx';
 import Badge from '../components/Badge.jsx';
-import Button from '../components/Button.jsx';
+import Button, { buttonClasses } from '../components/Button.jsx';
+import Card, { CardHeader } from '../components/Card.jsx';
+import DetailList, { DetailItem } from '../components/DetailList.jsx';
+import { UserLabel } from '../components/Avatar.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import CommentSection from '../components/CommentSection.jsx';
 import ActivityList from '../components/ActivityList.jsx';
 import { SelectInput } from '../components/FormField.jsx';
 import { ErrorMessage, Loading, SuccessMessage } from '../components/Feedback.jsx';
-
-function Detail({ label, children }) {
-  return (
-    <div>
-      <dt className="text-xs font-medium tracking-wide text-slate-500 uppercase">{label}</dt>
-      <dd className="mt-1 text-sm text-slate-800">{children}</dd>
-    </div>
-  );
-}
 
 export default function TaskDetailsPage() {
   const { id } = useParams();
@@ -40,6 +35,7 @@ export default function TaskDetailsPage() {
   if (error) return <ErrorMessage message={error} onRetry={reload} />;
 
   const { task, activity, permissions } = data;
+  const overdue = isOverdue(task);
 
   async function handleStatusSave() {
     setSaving(true);
@@ -70,21 +66,27 @@ export default function TaskDetailsPage() {
 
   return (
     <>
-      <Link to="/tasks" className="link mb-3 inline-block text-sm">
-        ← Back to tasks
-      </Link>
       <PageHeader
         title={task.title}
-        description={`Created by ${task.creator.name} on ${formatDateTime(task.createdAt)}`}
+        description={
+          <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+            <Badge value={task.status} />
+            <Badge value={task.priority} />
+            <span>
+              Created by {task.creator.name} on {formatDateTime(task.createdAt)}
+            </span>
+          </span>
+        }
         actions={
           <>
             {permissions.canEdit && (
-              <Link to={`/tasks/${task.id}/edit`} className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+              <Link to={`/tasks/${task.id}/edit`} className={buttonClasses('secondary')}>
+                <Pencil className="h-4 w-4" aria-hidden="true" />
                 Edit
               </Link>
             )}
             {permissions.canDelete && (
-              <Button variant="danger" onClick={() => setConfirmDelete(true)}>
+              <Button variant="dangerOutline" icon={Trash2} onClick={() => setConfirmDelete(true)}>
                 Delete
               </Button>
             )}
@@ -92,65 +94,73 @@ export default function TaskDetailsPage() {
         }
       />
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         <SuccessMessage message={message} />
         <ErrorMessage message={actionError} />
       </div>
 
-      <div className="mt-4 grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <section className="card p-5">
-            <h2 className="font-semibold text-navy">Description</h2>
-            <p className="mt-2 text-sm whitespace-pre-line text-slate-700">{task.description || 'No description provided.'}</p>
-          </section>
+      {/* On phones the details and status control come first; on desktop they head the side column. */}
+      <div className="mt-4 grid grid-cols-1 items-start gap-4 lg:grid-cols-3 lg:grid-rows-[auto_1fr]">
+        <Card className="lg:col-start-3 lg:row-start-1">
+          <CardHeader title="Details" icon={Info} />
+          <DetailList>
+            <DetailItem label="Assignee">
+              <UserLabel name={task.assignee.name} size="xs" />
+            </DetailItem>
+            <DetailItem label="Due date">
+              {task.dueDate ? (
+                <>
+                  <span className={overdue ? 'font-medium text-red-700' : ''}>{formatDate(task.dueDate)}</span>
+                  {task.status !== 'COMPLETED' && (
+                    <span className={`block text-xs ${overdue ? 'text-red-700' : 'text-slate-500'}`}>{formatDueLabel(task.dueDate)}</span>
+                  )}
+                </>
+              ) : (
+                <span className="text-slate-400">No due date</span>
+              )}
+            </DetailItem>
+            <DetailItem label="Created by">
+              <UserLabel name={task.creator.name} size="xs" />
+            </DetailItem>
+            {task.request && (
+              <DetailItem label="From request">
+                <Link to={`/requests/${task.request.id}`} className="link">
+                  {requestCode(task.request.id)}
+                </Link>
+                <span className="block truncate text-xs text-slate-500">{task.request.title}</span>
+              </DetailItem>
+            )}
+          </DetailList>
+
+          {permissions.canUpdateStatus && (
+            <div className="border-t border-slate-200 bg-surface-muted px-4 py-3">
+              <label htmlFor="task-status" className="mb-1.5 block text-sm font-medium text-slate-800">
+                Update status
+              </label>
+              <div className="flex gap-2">
+                <SelectInput id="task-status" options={toOptions(taskStatusLabels)} value={status} onChange={(event) => setStatus(event.target.value)} />
+                <Button onClick={handleStatusSave} loading={saving} disabled={status === task.status}>
+                  Save
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
+
+        <div className="space-y-4 lg:col-span-2 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+          <Card>
+            <CardHeader title="Description" icon={FileText} />
+            <p className="px-4 py-3.5 text-sm leading-relaxed whitespace-pre-line text-slate-700">
+              {task.description || <span className="text-slate-400">No description provided.</span>}
+            </p>
+          </Card>
           <CommentSection comments={task.comments} target={{ taskId: task.id }} onAdded={reload} />
         </div>
 
-        <div className="space-y-6">
-          <section className="card p-5">
-            <dl className="space-y-4">
-              <Detail label="Status">
-                <Badge value={task.status} />
-              </Detail>
-              <Detail label="Priority">
-                <Badge value={task.priority} />
-              </Detail>
-              <Detail label="Assignee">{task.assignee.name}</Detail>
-              <Detail label="Due date">
-                <span className={isOverdue(task) ? 'font-medium text-red-600' : ''}>
-                  {formatDate(task.dueDate)}
-                  {isOverdue(task) && ' (overdue)'}
-                </span>
-              </Detail>
-              {task.request && (
-                <Detail label="Related request">
-                  <Link to={`/requests/${task.request.id}`} className="link">
-                    {requestCode(task.request.id)} · {task.request.title}
-                  </Link>
-                </Detail>
-              )}
-            </dl>
-
-            {permissions.canUpdateStatus && (
-              <div className="mt-5 border-t border-slate-200 pt-4">
-                <label htmlFor="task-status" className="mb-1 block text-sm font-medium text-slate-700">
-                  Update status
-                </label>
-                <div className="flex gap-2">
-                  <SelectInput id="task-status" options={toOptions(taskStatusLabels)} value={status} onChange={(event) => setStatus(event.target.value)} />
-                  <Button onClick={handleStatusSave} loading={saving} disabled={status === task.status}>
-                    Save
-                  </Button>
-                </div>
-              </div>
-            )}
-          </section>
-
-          <section className="card">
-            <h2 className="border-b border-slate-200 px-4 py-3 font-semibold text-navy">History</h2>
-            <ActivityList activity={activity} showLinks={false} />
-          </section>
-        </div>
+        <Card className="lg:col-start-3 lg:row-start-2">
+          <CardHeader title="History" icon={History} />
+          <ActivityList activity={activity} showLinks={false} />
+        </Card>
       </div>
 
       <ConfirmDialog

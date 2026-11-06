@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
-import { formatDateTime } from '../services/format.js';
+import { formatDateTime, formatTimeAgo } from '../services/format.js';
+import Avatar from './Avatar.jsx';
 
 function entityLink(entry) {
   if (entry.action === 'deleted task') return null;
@@ -19,10 +20,10 @@ export default function ActivityList({ activity, showLinks = true }) {
         const link = showLinks ? entityLink(entry) : null;
         return (
           <li key={entry.id} className="flex gap-3 px-4 py-3">
-            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand" aria-hidden="true" />
+            <Avatar name={entry.user.name} size="sm" />
             <div className="min-w-0 flex-1 text-sm">
-              <p className="text-slate-700">
-                <span className="font-medium text-slate-900">{entry.user.name}</span> {entry.action}
+              <p className="leading-snug text-slate-600">
+                <span className="font-medium text-navy">{entry.user.name}</span> {entry.action}
                 {entry.details && (
                   <>
                     {': '}
@@ -31,12 +32,18 @@ export default function ActivityList({ activity, showLinks = true }) {
                         {entry.details}
                       </Link>
                     ) : (
-                      <span>{entry.details}</span>
+                      <span className="text-slate-800">{entry.details}</span>
                     )}
                   </>
                 )}
               </p>
-              <p className="mt-0.5 text-xs text-slate-500">{formatDateTime(entry.createdAt)}</p>
+              <time
+                dateTime={entry.createdAt}
+                title={formatDateTime(entry.createdAt)}
+                className="mt-0.5 block text-xs text-slate-500"
+              >
+                {formatTimeAgo(entry.createdAt)}
+              </time>
             </div>
           </li>
         );

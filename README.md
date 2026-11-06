@@ -75,7 +75,7 @@ cd frontend
 npm test
 
 # End-to-end tests (first time: npx playwright install chromium)
-# Note: this re-seeds the development database.
+# Starts its own servers on ports 3100/4100 and re-seeds only the flowops_test database.
 npm run test:e2e
 ```
 

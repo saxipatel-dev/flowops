@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useApi } from '../hooks/useApi.js';
 import PageHeader from '../components/PageHeader.jsx';
-import ActivityList from '../components/ActivityList.jsx';
+import ActivityTimeline from '../components/ActivityTimeline.jsx';
 import Pagination from '../components/Pagination.jsx';
 import Tabs from '../components/Tabs.jsx';
-import { ErrorMessage, Loading } from '../components/Feedback.jsx';
+import { EmptyState, ErrorMessage, Loading } from '../components/Feedback.jsx';
 
 const descriptions = {
   ADMIN: 'All activity across FlowOps.',
@@ -26,10 +27,24 @@ export default function ActivityPage() {
   ];
   if (user.role === 'ADMIN') tabs.push({ value: 'user', label: 'Users' });
 
+  function renderBody() {
+    if (error) return <div className="p-4"><ErrorMessage message={error} onRetry={reload} /></div>;
+    if (!data) return <Loading />;
+    if (data.activity.length === 0) {
+      return <EmptyState icon={Activity} title="No activity yet" message="Actions on tasks and requests will appear here as they happen." />;
+    }
+    return (
+      <div className={`transition-opacity ${loading ? 'opacity-60' : ''}`}>
+        <ActivityTimeline activity={data.activity} />
+        <Pagination page={data.page} pageSize={data.pageSize} total={data.total} onChange={setPage} />
+      </div>
+    );
+  }
+
   return (
-    <>
+    <div className="max-w-4xl">
       <PageHeader title="Activity" description={descriptions[user.role]} />
-      <div className="card">
+      <div className="card overflow-clip">
         <Tabs
           tabs={tabs}
           active={entityType}
@@ -38,15 +53,8 @@ export default function ActivityPage() {
             setPage(1);
           }}
         />
-        {loading && <div className="px-4"><Loading /></div>}
-        {error && <div className="p-4"><ErrorMessage message={error} onRetry={reload} /></div>}
-        {!loading && !error && (
-          <>
-            <ActivityList activity={data.activity} />
-            <Pagination page={data.page} pageSize={data.pageSize} total={data.total} onChange={setPage} />
-          </>
-        )}
+        {renderBody()}
       </div>
-    </>
+    </div>
   );
 }

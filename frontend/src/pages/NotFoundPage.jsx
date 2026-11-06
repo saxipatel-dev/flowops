@@ -1,13 +1,22 @@
 import { Link } from 'react-router';
+import { Compass } from 'lucide-react';
+import { EmptyState } from '../components/Feedback.jsx';
+import { buttonClasses } from '../components/Button.jsx';
 
 export default function NotFoundPage() {
   return (
-    <div className="card px-6 py-12 text-center">
-      <h1 className="text-lg font-semibold text-navy">Page not found</h1>
-      <p className="mt-1 text-sm text-slate-500">The page you are looking for does not exist.</p>
-      <Link to="/dashboard" className="link mt-4 inline-block text-sm">
-        Back to dashboard
-      </Link>
+    <div className="card">
+      <EmptyState
+        icon={Compass}
+        titleAs="h1"
+        title="Page not found"
+        message="The page you are looking for doesn't exist or may have been moved."
+        action={
+          <Link to="/dashboard" className={buttonClasses('secondary', 'sm')}>
+            Go to dashboard
+          </Link>
+        }
+      />
     </div>
   );
 }

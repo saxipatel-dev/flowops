@@ -9,7 +9,9 @@
     "test": "dotenv -e .env.test -- vitest run",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
-    "db:test:setup": "dotenv -e .env.test -- prisma migrate deploy"
+    "db:test:setup": "dotenv -e .env.test -- prisma migrate deploy",
+    "db:test:seed": "dotenv -e .env.test -- prisma db seed",
+    "start:test": "dotenv -e .env.test -- node src/server.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import api, { getErrorMessage, getFieldErrors } from '../services/api.js';
 import { priorityLabels, taskStatusLabels, toDateInput, toOptions } from '../services/format.js';
 import PageHeader from '../components/PageHeader.jsx';
-import Button from '../components/Button.jsx';
+import Button, { buttonClasses } from '../components/Button.jsx';
 import { FormField, SelectInput } from '../components/FormField.jsx';
 import { ErrorMessage, Loading } from '../components/Feedback.jsx';
 
@@ -90,7 +90,8 @@ export default function TaskFormPage() {
   return (
     <>
       <PageHeader title={isEditing ? 'Edit task' : 'New task'} description="Assign work to yourself or a team member." />
-      <form onSubmit={handleSubmit} noValidate className="card max-w-2xl space-y-5 p-6">
+      <form onSubmit={handleSubmit} noValidate className="card max-w-2xl">
+        <div className="space-y-5 p-5">
         <ErrorMessage message={error} />
         <FormField label="Title" htmlFor="title" error={fieldErrors.title} required>
           <input id="title" name="title" className={`input ${fieldErrors.title ? 'input-error' : ''}`} value={form.title} onChange={handleChange} maxLength={120} />
@@ -112,8 +113,9 @@ export default function TaskFormPage() {
             <SelectInput id="status" name="status" options={toOptions(taskStatusLabels)} value={form.status} onChange={handleChange} />
           </FormField>
         </div>
-        <div className="flex justify-end gap-2">
-          <Link to={isEditing ? `/tasks/${id}` : '/tasks'} className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+        </div>
+        <div className="flex justify-end gap-2 rounded-b-xl border-t border-slate-200 bg-surface-muted px-5 py-3">
+          <Link to={isEditing ? `/tasks/${id}` : '/tasks'} className={buttonClasses('secondary')}>
             Cancel
           </Link>
           <Button type="submit" loading={saving}>

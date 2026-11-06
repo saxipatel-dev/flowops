@@ -72,6 +72,19 @@ describe('authentication', () => {
     expect(changed.status).toBe(200);
     await expect(loginAs('alex@flowops.test', 'NewPassword1!')).resolves.toBeDefined();
   });
+
+  it('signs out other devices after a password change but keeps the current one', async () => {
+    const laptop = await loginAs('jordan@flowops.test');
+    const phone = await loginAs('jordan@flowops.test');
+
+    const changed = await laptop
+      .post('/api/auth/change-password')
+      .send({ currentPassword: 'Password123!', newPassword: 'Changed123!' });
+    expect(changed.status).toBe(200);
+
+    expect((await laptop.get('/api/auth/me')).status).toBe(200);
+    expect((await phone.get('/api/auth/me')).status).toBe(401);
+  });
 });
 
 describe('user management', () => {
@@ -117,6 +130,8 @@ describe('user management', () => {
     expect(response.status).toBe(200);
 
     expect((await elenaSession.get('/api/tasks')).status).toBe(401);
+    const storedSessions = await prisma.$queryRaw`SELECT sid FROM "session" WHERE sess->>'userId' = ${String(elena.id)}`;
+    expect(storedSessions).toHaveLength(0);
     const login = await request(app)
       .post('/api/auth/login')
       .set(ajax)

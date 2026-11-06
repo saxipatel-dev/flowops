@@ -48,3 +48,26 @@ export async function canAssignTo(user, assigneeId) {
   if (user.role === 'ADMIN' || assigneeId === user.id) return true;
   return user.role === 'MANAGER' && isInTeam(user.id, assigneeId);
 }
+
+// Which tasks a user sees in lists. "mine" means tasks assigned to them.
+export async function getVisibleTaskFilter(user, scope) {
+  if (scope === 'mine' || user.role === 'EMPLOYEE') {
+    return scope === 'mine'
+      ? { assignedTo: user.id }
+      : { OR: [{ assignedTo: user.id }, { createdBy: user.id }] };
+  }
+  if (user.role === 'ADMIN') return {};
+
+  const teamIds = await getTeamUserIds(user.id);
+  return { OR: [{ assignedTo: { in: [...teamIds, user.id] } }, { createdBy: user.id }] };
+}
+
+// Which requests a user sees in lists. "review" means requests waiting on them as reviewer.
+export async function getVisibleRequestFilter(user, scope) {
+  if (scope === 'review') return { reviewerId: user.id };
+  if (scope !== 'team' || user.role === 'EMPLOYEE') return { requestedBy: user.id };
+  if (user.role === 'ADMIN') return {};
+
+  const teamIds = await getTeamUserIds(user.id);
+  return { OR: [{ requestedBy: { in: [...teamIds, user.id] } }, { reviewerId: user.id }] };
+}

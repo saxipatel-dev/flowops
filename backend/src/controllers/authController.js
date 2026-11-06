@@ -3,6 +3,7 @@ import { z } from 'zod';
 import prisma from '../utils/prisma.js';
 import { HttpError, badRequest } from '../utils/httpError.js';
 import { userDetails } from '../utils/selects.js';
+import { endUserSessions, regenerateSession } from '../services/sessionService.js';
 
 const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email('Enter a valid email address'),
@@ -33,10 +34,7 @@ export async function login(req, res) {
   }
 
   // A new session ID on login prevents session fixation.
-  await new Promise((resolve, reject) => {
-    req.session.regenerate((err) => (err ? reject(err) : resolve()));
-  });
-  req.session.userId = user.id;
+  await regenerateSession(req, user.id);
 
   const profile = await prisma.user.findUnique({ where: { id: user.id }, select: userDetails });
   res.json({ user: profile });
@@ -74,5 +72,9 @@ export async function changePassword(req, res) {
 
   const passwordHash = await bcrypt.hash(newPassword, 10);
   await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
+
+  // Sign out every other device, and give this one a fresh session ID.
+  await endUserSessions(user.id, req.sessionID);
+  await regenerateSession(req, user.id);
   res.json({ message: 'Password updated.' });
 }

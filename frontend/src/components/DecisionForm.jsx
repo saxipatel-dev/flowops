@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import api, { getErrorMessage, getFieldErrors } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { Check, ClipboardCheck, X } from 'lucide-react';
 import Button from './Button.jsx';
+import Card, { CardHeader } from './Card.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
 import { FormField, SelectInput } from './FormField.jsx';
 import { ErrorMessage } from './Feedback.jsx';
@@ -62,16 +64,16 @@ export default function DecisionForm({ request, onDecided }) {
   }
 
   return (
-    <section className="card border-brand/40 p-5">
-      <h2 className="font-semibold text-navy">Review this request</h2>
-      <div className="mt-4 space-y-4">
+    <Card className="ring-2 ring-brand/15">
+      <CardHeader title="Review this request" description="Your decision is shared with the requester." icon={ClipboardCheck} />
+      <div className="space-y-4 p-4">
         <ErrorMessage message={error} />
         <FormField label="Comment or rejection reason" htmlFor="reason" error={fieldErrors.reason} hint="Required when rejecting.">
           <textarea id="reason" rows={3} className={`input ${fieldErrors.reason ? 'input-error' : ''}`} value={reason} onChange={(event) => setReason(event.target.value)} maxLength={1000} />
         </FormField>
 
         {needsFollowUp && (
-          <div className="rounded-md bg-slate-50 p-4">
+          <div className="rounded-lg border border-slate-200 bg-surface-muted p-4">
             <p className="mb-3 text-sm text-slate-600">Approving creates a follow-up task to fulfil this request.</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField label="Assign task to" htmlFor="assigneeId">
@@ -85,10 +87,10 @@ export default function DecisionForm({ request, onDecided }) {
         )}
 
         <div className="flex gap-2">
-          <Button variant="success" onClick={() => startDecision('approve')}>
+          <Button variant="success" icon={Check} onClick={() => startDecision('approve')}>
             Approve
           </Button>
-          <Button variant="danger" onClick={() => startDecision('reject')}>
+          <Button variant="dangerOutline" icon={X} onClick={() => startDecision('reject')}>
             Reject
           </Button>
         </div>
@@ -108,6 +110,6 @@ export default function DecisionForm({ request, onDecided }) {
         onConfirm={submitDecision}
         onCancel={() => setPendingDecision(null)}
       />
-    </section>
+    </Card>
   );
 }

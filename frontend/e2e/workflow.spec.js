@@ -80,3 +80,42 @@ test('request is submitted, approved, and its follow-up task is completed', asyn
   await page.reload();
   await expect(page.getByText('To Do → Completed')).toBeVisible();
 });
+
+test('changing a password signs out other browsers', async ({ page, browser }) => {
+  const otherDevice = await browser.newPage();
+  await login(otherDevice, 'jordan@flowops.test');
+  await login(page, 'jordan@flowops.test');
+
+  await page.goto('/profile');
+  await page.getByLabel('Current password').fill(PASSWORD);
+  await page.getByLabel('New password', { exact: true }).fill('Changed123!');
+  await page.getByLabel('Confirm new password').fill('Changed123!');
+  await page.getByRole('button', { name: 'Change password' }).click();
+  await expect(page.getByText('Password changed.')).toBeVisible();
+
+  // This browser stays signed in; the other one is sent back to the login page.
+  await page.getByRole('link', { name: 'Tasks', exact: true }).click();
+  await expect(page).toHaveURL(/\/tasks/);
+  await otherDevice.goto('/tasks');
+  await expect(otherDevice).toHaveURL(/\/login/);
+  await otherDevice.close();
+});
+
+test('navigation works on a phone-sized screen', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await login(page, 'priya@flowops.test');
+
+  const menuButton = page.getByRole('button', { name: 'Open navigation' });
+  await menuButton.click();
+  await expect(page.getByRole('button', { name: 'Close navigation' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(menuButton).toBeFocused();
+
+  await menuButton.click();
+  await page.getByRole('link', { name: 'Requests', exact: true }).click();
+  await expect(page).toHaveURL(/\/requests/);
+  await page.getByRole('tab', { name: 'Team requests' }).click();
+  // Lists switch to cards instead of a squeezed table.
+  await expect(page.getByRole('table')).toBeHidden();
+  await expect(page.getByRole('list', { name: 'Requests' })).toBeVisible();
+});

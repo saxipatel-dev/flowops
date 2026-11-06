@@ -8,8 +8,9 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     // Same-origin API calls keep the session cookie simple (no CORS needed).
+    // The end-to-end tests point this at a separate API that uses the test database.
     proxy: {
-      '/api': 'http://localhost:4000',
+      '/api': process.env.API_PROXY_TARGET || 'http://localhost:4000',
     },
   },
   test: {

@@ -1,11 +1,73 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Pencil, UserPlus, Users } from 'lucide-react';
 import { useApi } from '../hooks/useApi.js';
 import { roleLabels, toOptions } from '../services/format.js';
 import PageHeader from '../components/PageHeader.jsx';
 import Button from '../components/Button.jsx';
+import Badge from '../components/Badge.jsx';
 import FilterBar from '../components/FilterBar.jsx';
+import DataTable from '../components/DataTable.jsx';
+import Avatar from '../components/Avatar.jsx';
 import UserForm from '../components/UserForm.jsx';
 import { EmptyState, ErrorMessage, Loading, SuccessMessage } from '../components/Feedback.jsx';
+
+function Person({ user }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      <Avatar name={user.name} />
+      <div className="min-w-0">
+        <p className={`truncate font-medium ${user.isActive ? 'text-navy' : 'text-slate-500'}`}>{user.name}</p>
+        <p className="truncate text-xs text-slate-500">{user.jobTitle || 'No job title'}</p>
+      </div>
+    </div>
+  );
+}
+
+function EditButton({ user, onEdit }) {
+  return (
+    <Button variant="ghost" size="sm" icon={Pencil} onClick={() => onEdit(user)} aria-label={`Edit ${user.name}`}>
+      Edit
+    </Button>
+  );
+}
+
+function getColumns(onEdit) {
+  return [
+    { key: 'name', header: 'Name', cell: (user) => <Person user={user} />, className: 'min-w-56' },
+    { key: 'email', header: 'Email', cell: (user) => <span className="text-slate-600">{user.email}</span> },
+    { key: 'role', header: 'Role', cell: (user) => <Badge value={user.role} /> },
+    {
+      key: 'department',
+      header: 'Department',
+      cell: (user) => user.department?.name || <span className="text-slate-400">—</span>,
+      className: 'whitespace-nowrap',
+    },
+    { key: 'status', header: 'Status', cell: (user) => <Badge value={user.isActive ? 'ACTIVE' : 'INACTIVE'} /> },
+    {
+      key: 'actions',
+      header: <span className="sr-only">Actions</span>,
+      cell: (user) => <EditButton user={user} onEdit={onEdit} />,
+      className: 'text-right',
+    },
+  ];
+}
+
+function UserCard({ user, onEdit }) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-start justify-between gap-3">
+        <Person user={user} />
+        <EditButton user={user} onEdit={onEdit} />
+      </div>
+      <p className="truncate pl-11 text-xs text-slate-500">{user.email}</p>
+      <div className="flex flex-wrap items-center gap-2 pl-11 text-xs text-slate-500">
+        <Badge value={user.role} />
+        <Badge value={user.isActive ? 'ACTIVE' : 'INACTIVE'} />
+        {user.department && <span>{user.department.name}</span>}
+      </div>
+    </div>
+  );
+}
 
 export default function UsersPage() {
   const [filters, setFilters] = useState({ search: '', role: '' });
@@ -14,6 +76,12 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [message, setMessage] = useState('');
+  const formRef = useRef(null);
+
+  // Bring the form into view when it opens, since it sits above a long list.
+  useEffect(() => {
+    if (showForm) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [showForm, editingUser]);
 
   function openForm(user = null) {
     setEditingUser(user);
@@ -28,79 +96,66 @@ export default function UsersPage() {
     reload();
   }
 
+  const hasFilters = Boolean(filters.search || filters.role);
+
+  function renderBody() {
+    if (error) return <div className="p-4"><ErrorMessage message={error} onRetry={reload} /></div>;
+    if (!data) return <Loading />;
+    if (data.users.length === 0) {
+      return <EmptyState icon={Users} title="No users found" message={hasFilters ? 'Try a different search or role.' : 'Add the first person to get started.'} />;
+    }
+    return (
+      <DataTable
+        label="Users"
+        columns={getColumns(openForm)}
+        rows={data.users}
+        renderCard={(user) => <UserCard user={user} onEdit={openForm} />}
+        busy={loading}
+        stackBelow="lg"
+      />
+    );
+  }
+
   return (
     <>
       <PageHeader
         title="User management"
         description="Add people, assign roles and departments, and deactivate accounts."
-        actions={!showForm && <Button onClick={() => openForm()}>Add user</Button>}
+        actions={
+          !showForm && (
+            <Button icon={UserPlus} onClick={() => openForm()}>
+              Add user
+            </Button>
+          )
+        }
       />
 
       <div className="space-y-4">
         <SuccessMessage message={message} />
         {showForm && (
-          <UserForm
-            key={editingUser?.id || 'new'}
-            user={editingUser}
-            departments={departmentData?.departments || []}
-            onSaved={handleSaved}
-            onCancel={() => setShowForm(false)}
-          />
+          <div ref={formRef} className="scroll-mt-20">
+            <UserForm
+              key={editingUser?.id || 'new'}
+              user={editingUser}
+              departments={departmentData?.departments || []}
+              onSaved={handleSaved}
+              onCancel={() => setShowForm(false)}
+            />
+          </div>
         )}
 
-        <div className="card">
+        <div className="card overflow-hidden">
           <FilterBar
             searchValue={filters.search}
             searchPlaceholder="Search by name or email"
             onSearch={(search) => setFilters({ ...filters, search })}
             values={filters}
             onFilterChange={(name, value) => setFilters({ ...filters, [name]: value })}
+            onClear={() => setFilters({ search: '', role: '' })}
+            resultLabel={data && `${data.users.length} ${data.users.length === 1 ? 'person' : 'people'}`}
             filters={[{ name: 'role', label: 'Roles', options: toOptions(roleLabels) }]}
           />
-          {loading && <div className="px-4"><Loading /></div>}
-          {error && <div className="p-4"><ErrorMessage message={error} onRetry={reload} /></div>}
-          {!loading && !error && data.users.length === 0 && <EmptyState title="No users found" />}
-          {!loading && !error && data.users.length > 0 && (
-            <div className="overflow-x-auto">
-              <table className="table-basic">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Department</th>
-                    <th>Status</th>
-                    <th>
-                      <span className="sr-only">Actions</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {data.users.map((user) => (
-                    <tr key={user.id} className={user.isActive ? '' : 'text-slate-400'}>
-                      <td>
-                        <p className="font-medium text-slate-900">{user.name}</p>
-                        {user.jobTitle && <p className="text-xs text-slate-500">{user.jobTitle}</p>}
-                      </td>
-                      <td>{user.email}</td>
-                      <td>{roleLabels[user.role]}</td>
-                      <td>{user.department?.name || '—'}</td>
-                      <td>
-                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${user.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                          {user.isActive ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="text-right">
-                        <button type="button" className="link text-sm" onClick={() => openForm(user)}>
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          {renderBody()}
         </div>
       </div>
     </>

@@ -65,4 +65,38 @@ describe('activity and dashboard', () => {
       await prisma.request.count({ where: { reviewerId: daniel.id, status: 'PENDING' } }),
     );
   });
+
+  it('returns status chart counts that follow role visibility rules', async () => {
+    const maya = await findUser('maya@flowops.test');
+    const employee = await (await loginAs('maya@flowops.test')).get('/api/dashboard/summary');
+
+    expect(employee.body.taskStatusCounts.TODO).toBe(await prisma.task.count({ where: { assignedTo: maya.id, status: 'TODO' } }));
+    expect(employee.body.requestStatusCounts.PENDING).toBe(
+      await prisma.request.count({ where: { requestedBy: maya.id, status: 'PENDING' } }),
+    );
+    expect(Object.values(employee.body.requestStatusCounts).reduce((a, b) => a + b, 0)).toBe(
+      await prisma.request.count({ where: { requestedBy: maya.id } }),
+    );
+    expect(employee.body.recentActivity.length).toBeLessThanOrEqual(5);
+
+    // A manager's task chart matches the Team tasks list, and the admin sees every task.
+    const manager = await loginAs('daniel@flowops.test');
+    const managerSummary = await manager.get('/api/dashboard/summary');
+    const teamTasks = await manager.get('/api/tasks?scope=all');
+    expect(Object.values(managerSummary.body.taskStatusCounts).reduce((a, b) => a + b, 0)).toBe(teamTasks.body.total);
+    const teamRequests = await manager.get('/api/requests?scope=team');
+    expect(Object.values(managerSummary.body.requestStatusCounts).reduce((a, b) => a + b, 0)).toBe(teamRequests.body.total);
+
+    const admin = await (await loginAs('admin@flowops.test')).get('/api/dashboard/summary');
+    expect(Object.values(admin.body.taskStatusCounts).reduce((a, b) => a + b, 0)).toBe(await prisma.task.count());
+  });
+
+  it('counts overdue tasks assigned to the user', async () => {
+    const maya = await findUser('maya@flowops.test');
+    const today = new Date(new Date().toISOString().slice(0, 10));
+    const response = await (await loginAs('maya@flowops.test')).get('/api/dashboard/summary');
+    expect(response.body.counts.overdueTasks).toBe(
+      await prisma.task.count({ where: { assignedTo: maya.id, status: { not: 'COMPLETED' }, dueDate: { lt: today } } }),
+    );
+  });
 });

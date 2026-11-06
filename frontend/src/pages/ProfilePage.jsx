@@ -1,11 +1,60 @@
 import { useState } from 'react';
+import { Building2, CalendarDays, Check, KeyRound, Mail, UserRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import api, { getErrorMessage, getFieldErrors } from '../services/api.js';
-import { roleLabels } from '../services/format.js';
 import PageHeader from '../components/PageHeader.jsx';
 import Button from '../components/Button.jsx';
+import Badge from '../components/Badge.jsx';
+import Card, { CardHeader } from '../components/Card.jsx';
+import Avatar from '../components/Avatar.jsx';
 import { FormField } from '../components/FormField.jsx';
 import { ErrorMessage, SuccessMessage } from '../components/Feedback.jsx';
+
+const MIN_PASSWORD_LENGTH = 8;
+
+function FormFooter({ children, note }) {
+  return (
+    <div className="flex flex-col-reverse gap-3 rounded-b-xl border-t border-slate-200 bg-surface-muted px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-xs text-slate-500">{note}</p>
+      <div className="flex justify-end">{children}</div>
+    </div>
+  );
+}
+
+function IdentityCard() {
+  const { user } = useAuth();
+  const memberSince = new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const rows = [
+    [Mail, 'Email', user.email],
+    [Building2, 'Department', user.department?.name || 'No department'],
+    [CalendarDays, 'Member since', `Joined ${memberSince}`],
+  ];
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="h-16 bg-gradient-to-r from-brand/90 to-indigo-400" aria-hidden="true" />
+      <div className="-mt-8 px-4 pb-4">
+        <span className="inline-block rounded-full ring-4 ring-white">
+          <Avatar name={user.name} size="lg" />
+        </span>
+        <h2 className="mt-2 text-base font-semibold">{user.name}</h2>
+        <p className="text-sm text-slate-500">{user.jobTitle || 'No job title'}</p>
+        <div className="mt-2">
+          <Badge value={user.role} />
+        </div>
+      </div>
+      <dl className="divide-y divide-slate-100 border-t border-slate-200">
+        {rows.map(([Icon, label, value]) => (
+          <div key={label} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+            <Icon className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+            <dt className="sr-only">{label}</dt>
+            <dd className="min-w-0 truncate text-slate-700">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </Card>
+  );
+}
 
 function ProfileForm() {
   const { user, setUser } = useAuth();
@@ -13,6 +62,13 @@ function ProfileForm() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [status, setStatus] = useState({ error: '', success: '' });
   const [saving, setSaving] = useState(false);
+  const unchanged = form.name === user.name && form.jobTitle === (user.jobTitle || '');
+
+  function handleChange(event) {
+    setForm({ ...form, [event.target.name]: event.target.value });
+    setFieldErrors({ ...fieldErrors, [event.target.name]: '' });
+    setStatus({ error: '', success: '' });
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -26,6 +82,7 @@ function ProfileForm() {
     try {
       const response = await api.patch('/auth/me', form);
       setUser(response.data.user);
+      setForm({ name: response.data.user.name, jobTitle: response.data.user.jobTitle || '' });
       setStatus({ error: '', success: 'Profile updated.' });
     } catch (err) {
       setStatus({ error: getErrorMessage(err), success: '' });
@@ -36,37 +93,36 @@ function ProfileForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="card space-y-4 p-6">
-      <h2 className="font-semibold text-navy">Profile details</h2>
-      <SuccessMessage message={status.success} />
-      <ErrorMessage message={status.error} />
-      <FormField label="Full name" htmlFor="name" error={fieldErrors.name} required>
-        <input id="name" className={`input ${fieldErrors.name ? 'input-error' : ''}`} value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} maxLength={80} />
-      </FormField>
-      <FormField label="Job title" htmlFor="jobTitle" error={fieldErrors.jobTitle}>
-        <input id="jobTitle" className="input" value={form.jobTitle} onChange={(event) => setForm({ ...form, jobTitle: event.target.value })} maxLength={80} />
-      </FormField>
-      <dl className="grid grid-cols-2 gap-4 rounded-md bg-slate-50 p-4 text-sm">
-        <div>
-          <dt className="text-slate-500">Email</dt>
-          <dd className="font-medium">{user.email}</dd>
+    <Card as="form" onSubmit={handleSubmit} noValidate>
+      <CardHeader title="Profile details" description="How your name appears to your team." icon={UserRound} />
+      <div className="space-y-4 p-4">
+        <SuccessMessage message={status.success} />
+        <ErrorMessage message={status.error} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField label="Full name" htmlFor="name" error={fieldErrors.name} required>
+            <input id="name" name="name" className={`input ${fieldErrors.name ? 'input-error' : ''}`} value={form.name} onChange={handleChange} maxLength={80} />
+          </FormField>
+          <FormField label="Job title" htmlFor="jobTitle" error={fieldErrors.jobTitle}>
+            <input id="jobTitle" name="jobTitle" className="input" value={form.jobTitle} onChange={handleChange} maxLength={80} />
+          </FormField>
         </div>
-        <div>
-          <dt className="text-slate-500">Role</dt>
-          <dd className="font-medium">{roleLabels[user.role]}</dd>
-        </div>
-        <div>
-          <dt className="text-slate-500">Department</dt>
-          <dd className="font-medium">{user.department?.name || '—'}</dd>
-        </div>
-      </dl>
-      <p className="text-xs text-slate-500">Contact an administrator to change your email, role, or department.</p>
-      <div className="flex justify-end">
-        <Button type="submit" loading={saving}>
+      </div>
+      <FormFooter note="Contact an administrator to change your email, role, or department.">
+        <Button type="submit" loading={saving} disabled={unchanged}>
           Save profile
         </Button>
-      </div>
-    </form>
+      </FormFooter>
+    </Card>
+  );
+}
+
+function PasswordRule({ met, children }) {
+  return (
+    <li className={`flex items-center gap-1.5 text-xs ${met ? 'text-emerald-700' : 'text-slate-500'}`}>
+      <Check className={`h-3.5 w-3.5 ${met ? '' : 'opacity-30'}`} aria-hidden="true" />
+      {children}
+      <span className="sr-only">{met ? '(done)' : '(not yet)'}</span>
+    </li>
   );
 }
 
@@ -79,13 +135,14 @@ function PasswordForm() {
 
   function handleChange(event) {
     setForm({ ...form, [event.target.name]: event.target.value });
+    setFieldErrors({ ...fieldErrors, [event.target.name]: '' });
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     const errors = {};
     if (!form.currentPassword) errors.currentPassword = 'Current password is required';
-    if (form.newPassword.length < 8) errors.newPassword = 'New password must be at least 8 characters';
+    if (form.newPassword.length < MIN_PASSWORD_LENGTH) errors.newPassword = 'New password must be at least 8 characters';
     if (form.confirmPassword !== form.newPassword) errors.confirmPassword = 'Passwords do not match';
     setFieldErrors(errors);
     setStatus({ error: '', success: '' });
@@ -104,25 +161,58 @@ function PasswordForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="card space-y-4 p-6">
-      <h2 className="font-semibold text-navy">Change password</h2>
-      <SuccessMessage message={status.success} />
-      <ErrorMessage message={status.error} />
-      <FormField label="Current password" htmlFor="currentPassword" error={fieldErrors.currentPassword}>
-        <input id="currentPassword" name="currentPassword" type="password" autoComplete="current-password" className="input" value={form.currentPassword} onChange={handleChange} />
-      </FormField>
-      <FormField label="New password" htmlFor="newPassword" error={fieldErrors.newPassword} hint="At least 8 characters.">
-        <input id="newPassword" name="newPassword" type="password" autoComplete="new-password" className="input" value={form.newPassword} onChange={handleChange} />
-      </FormField>
-      <FormField label="Confirm new password" htmlFor="confirmPassword" error={fieldErrors.confirmPassword}>
-        <input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" className="input" value={form.confirmPassword} onChange={handleChange} />
-      </FormField>
-      <div className="flex justify-end">
+    <Card as="form" onSubmit={handleSubmit} noValidate>
+      <CardHeader title="Change password" description="Use a password you don't use anywhere else." icon={KeyRound} />
+      <div className="space-y-4 p-4">
+        <SuccessMessage message={status.success} />
+        <ErrorMessage message={status.error} />
+        <FormField label="Current password" htmlFor="currentPassword" error={fieldErrors.currentPassword}>
+          <input
+            id="currentPassword"
+            name="currentPassword"
+            type="password"
+            autoComplete="current-password"
+            className={`input sm:max-w-sm ${fieldErrors.currentPassword ? 'input-error' : ''}`}
+            value={form.currentPassword}
+            onChange={handleChange}
+          />
+        </FormField>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField label="New password" htmlFor="newPassword" error={fieldErrors.newPassword}>
+            <input
+              id="newPassword"
+              name="newPassword"
+              type="password"
+              autoComplete="new-password"
+              aria-describedby="password-rules"
+              className={`input ${fieldErrors.newPassword ? 'input-error' : ''}`}
+              value={form.newPassword}
+              onChange={handleChange}
+            />
+          </FormField>
+          <FormField label="Confirm new password" htmlFor="confirmPassword" error={fieldErrors.confirmPassword}>
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              className={`input ${fieldErrors.confirmPassword ? 'input-error' : ''}`}
+              value={form.confirmPassword}
+              onChange={handleChange}
+            />
+          </FormField>
+        </div>
+        <ul id="password-rules" className="space-y-1">
+          <PasswordRule met={form.newPassword.length >= MIN_PASSWORD_LENGTH}>At least 8 characters</PasswordRule>
+          <PasswordRule met={form.newPassword.length > 0 && form.newPassword === form.confirmPassword}>Both new passwords match</PasswordRule>
+        </ul>
+      </div>
+      <FormFooter note="You'll stay signed in here. Other devices will be signed out.">
         <Button type="submit" loading={saving}>
           Change password
         </Button>
-      </div>
-    </form>
+      </FormFooter>
+    </Card>
   );
 }
 
@@ -130,9 +220,12 @@ export default function ProfilePage() {
   return (
     <>
       <PageHeader title="Profile" description="Manage your personal details and password." />
-      <div className="grid gap-6 lg:grid-cols-2">
-        <ProfileForm />
-        <PasswordForm />
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
+        <IdentityCard />
+        <div className="space-y-4 lg:col-span-2">
+          <ProfileForm />
+          <PasswordForm />
+        </div>
       </div>
     </>
   );

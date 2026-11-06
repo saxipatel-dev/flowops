@@ -1,11 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import Badge from '../components/Badge.jsx';
 import Pagination from '../components/Pagination.jsx';
 import LoginPage from '../pages/LoginPage.jsx';
-import { AuthProvider } from '../context/AuthContext.jsx';
+import Sidebar from '../components/Sidebar.jsx';
+import StatusChart from '../components/StatusChart.jsx';
+import { getTimelineSteps } from '../components/ApprovalTimeline.jsx';
+import FilterBar from '../components/FilterBar.jsx';
+import { AuthProvider, useAuth } from '../context/AuthContext.jsx';
 import api from '../services/api.js';
 
 vi.mock('../services/api.js', async (importOriginal) => {
@@ -80,5 +84,132 @@ describe('LoginPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
     expect(await screen.findByText('Incorrect email or password.')).toBeInTheDocument();
     expect(api.post).toHaveBeenCalledWith('/auth/login', { email: 'maya@flowops.test', password: 'wrong' });
+  });
+});
+
+describe('Sidebar', () => {
+  // The app only renders the sidebar after the user has loaded.
+  function LoadedSidebar() {
+    const { user } = useAuth();
+    return user ? <Sidebar open={false} onClose={() => {}} onLogout={() => {}} /> : null;
+  }
+
+  function renderSidebar(role) {
+    api.get.mockResolvedValue({ data: { user: { id: 1, name: 'Test User', role, department: null } } });
+    return render(
+      <MemoryRouter>
+        <AuthProvider>
+          <LoadedSidebar />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+  }
+
+  it('shows employees only the links they can use', async () => {
+    renderSidebar('EMPLOYEE');
+    expect(await screen.findByRole('link', { name: 'Tasks' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Approvals' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'User Management' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument();
+  });
+
+  it('shows Approvals to managers and User Management to admins', async () => {
+    const { unmount } = renderSidebar('MANAGER');
+    expect(await screen.findByRole('link', { name: 'Approvals' })).toBeInTheDocument();
+    unmount();
+
+    renderSidebar('ADMIN');
+    expect(await screen.findByRole('link', { name: 'User Management' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Approvals' })).not.toBeInTheDocument();
+  });
+});
+
+describe('StatusChart', () => {
+  it('lists each status with its count, share, and a filtered link', () => {
+    render(
+      <MemoryRouter>
+        <StatusChart
+          title="Team tasks"
+          segments={[
+            { key: 'TODO', label: 'To Do', value: 1, stroke: '', dot: '', to: '/tasks?status=TODO' },
+            { key: 'COMPLETED', label: 'Completed', value: 3, stroke: '', dot: '', to: '/tasks?status=COMPLETED' },
+          ]}
+          emptyMessage="No tasks yet."
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('img', { name: 'Team tasks: To Do: 1, Completed: 3' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Completed\s*3\s*75%/ })).toHaveAttribute('href', '/tasks?status=COMPLETED');
+  });
+
+  it('shows a message when there is no data', () => {
+    render(
+      <MemoryRouter>
+        <StatusChart title="My requests" segments={[{ key: 'PENDING', label: 'Pending', value: 0, to: '/' }]} emptyMessage="No requests yet." />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText('No requests yet.')).toBeInTheDocument();
+  });
+});
+
+describe('ApprovalTimeline', () => {
+  const base = {
+    requester: { name: 'Maya Chen' },
+    reviewer: { name: 'Daniel Reyes' },
+    createdAt: '2026-11-01T09:00:00.000Z',
+    category: 'EQUIPMENT',
+    task: null,
+  };
+
+  it('shows a pending request waiting on its reviewer', () => {
+    const steps = getTimelineSteps({ ...base, status: 'PENDING' });
+    expect(steps.map((step) => [step.title, step.state])).toEqual([
+      ['Submitted', 'submitted'],
+      ['Awaiting review', 'current'],
+      ['Decision', 'upcoming'],
+      ['Follow-up task', 'upcoming'],
+    ]);
+    expect(steps[1].detail).toBe('Assigned to Daniel Reyes');
+  });
+
+  it('shows the rejection reason and no follow-up step', () => {
+    const steps = getTimelineSteps({
+      ...base,
+      status: 'REJECTED',
+      decidedBy: { name: 'Daniel Reyes' },
+      reviewedAt: '2026-11-02T09:00:00.000Z',
+      reviewComment: 'Use the spare one',
+    });
+    expect(steps).toHaveLength(2);
+    expect(steps[1]).toMatchObject({ title: 'Rejected', state: 'rejected', comment: 'Use the spare one', commentLabel: 'Reason' });
+  });
+
+  it('marks an approved request fulfilled once its task is completed', () => {
+    const task = { id: 7, title: 'Fulfil request: Laptop', status: 'COMPLETED', assignee: { name: 'Maya Chen' } };
+    const steps = getTimelineSteps({ ...base, status: 'APPROVED', decidedBy: { name: 'Daniel Reyes' }, task });
+    expect(steps.map((step) => step.title)).toEqual(['Submitted', 'Approved', 'Fulfilled']);
+  });
+});
+
+describe('FilterBar', () => {
+  it('searches automatically after typing stops', async () => {
+    const onSearch = vi.fn();
+    render(<FilterBar searchValue="" onSearch={onSearch} filters={[]} values={{}} onFilterChange={() => {}} onClear={() => {}} />);
+    await userEvent.type(screen.getByRole('searchbox'), 'laptop');
+    expect(onSearch).not.toHaveBeenCalled();
+    await waitFor(() => expect(onSearch).toHaveBeenCalledWith('laptop'));
+    expect(onSearch).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers a clear button only when filters are active', async () => {
+    const onClear = vi.fn();
+    const props = { onSearch: () => {}, values: { status: 'TODO' }, onFilterChange: () => {}, onClear };
+    const filters = [{ name: 'status', label: 'Statuses', options: [{ value: 'TODO', label: 'To Do' }] }];
+    const { rerender } = render(<FilterBar {...props} filters={filters} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    expect(onClear).toHaveBeenCalled();
+
+    rerender(<FilterBar {...props} values={{}} filters={filters} />);
+    expect(screen.queryByRole('button', { name: 'Clear' })).not.toBeInTheDocument();
   });
 });
