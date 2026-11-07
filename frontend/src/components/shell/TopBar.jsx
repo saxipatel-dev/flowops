@@ -30,8 +30,9 @@ export default function TopBar({ onOpenSearch }) {
 
   return (
     <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-3 border-b border-line bg-canvas/85 px-4 backdrop-blur-md sm:px-6 lg:px-8">
-      <Link to="/dashboard" className="rounded-lg lg:hidden" aria-label="FlowOps, go to Mission Control">
+      <Link to="/dashboard" className="rounded-lg lg:hidden">
         <LogoMark className="h-8 w-8" />
+        <span className="sr-only">FlowOps, go to Mission Control</span>
       </Link>
 
       <nav aria-label="Breadcrumb" className="min-w-0 flex-1">
@@ -61,12 +62,11 @@ export default function TopBar({ onOpenSearch }) {
         type="button"
         onClick={onOpenSearch}
         className="flex h-9 items-center gap-2 rounded-lg border border-line bg-sunken px-2.5 text-sm text-faint transition-colors hover:border-line-strong hover:text-muted sm:w-72"
-        aria-label="Search and jump to"
         aria-keyshortcuts={isMac ? 'Meta+K' : 'Control+K'}
       >
         <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
-        <span className="hidden flex-1 text-left sm:block">Search or jump to…</span>
-        <kbd className="hidden rounded border border-line border-b-2 bg-raised px-1.5 font-mono text-[10px] text-muted sm:block">
+        <span className="sr-only sm:not-sr-only sm:flex-1 sm:text-left">Search or jump to…</span>
+        <kbd aria-hidden="true" className="hidden rounded border border-line border-b-2 bg-raised px-1.5 font-mono text-[10px] text-muted sm:block">
           {isMac ? '⌘K' : 'Ctrl K'}
         </kbd>
       </button>

@@ -23,7 +23,7 @@ function Meter({ title, counts, order, colors, labels, linkFor }) {
       <ul className="mt-2.5 grid grid-cols-3 gap-2">
         {segments.map((segment) => (
           <li key={segment.key}>
-            <Link to={linkFor(segment.key)} className="group block rounded-md py-1 text-xs" aria-label={`${labels[segment.key]}: ${segment.count}. Show them.`}>
+            <Link to={linkFor(segment.key)} className="group block rounded-md py-1 text-xs">
               <span className="flex items-center gap-1.5 text-faint group-hover:text-ink">
                 <span className={`h-2 w-2 rounded-full ${colors[segment.key]}`} aria-hidden="true" />
                 {labels[segment.key]}

@@ -63,7 +63,7 @@ describe('FlowMap', () => {
   it('shows a rejection, its reason, and the stages that no longer apply', () => {
     renderMap({ ...base, status: 'REJECTED', reviewedAt: '2026-11-03T10:00:00.000Z', decidedBy: priya, reviewComment: 'Not this quarter' });
     expect(stops()[2]).toHaveAttribute('aria-pressed', 'true');
-    expect(stops()[2]).toHaveAccessibleName(/^Rejected: Rejected/);
+    expect(stops()[2]).toHaveAccessibleName(/^Rejected\b[\s\S]*\. Rejected\./);
     expect(screen.getAllByText('“Not this quarter”')[0]).toBeInTheDocument();
     expect(stops()[3]).toHaveAccessibleName(/Does not apply/);
   });

@@ -51,8 +51,8 @@ describe('WeekLineMap', () => {
     renderMap();
     const lines = screen.getByRole('list', { name: 'Tasks by person' });
     expect(within(lines).getAllByRole('listitem')).toHaveLength(2);
-    expect(screen.getByRole('button', { name: /Update onboarding guide, you, To do/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Guest Wi-Fi, Sam Okafor/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Update onboarding guide\s*, you, To do/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Guest Wi-Fi\s*, Sam Okafor/ })).toBeInTheDocument();
   });
 
   it('offers a status action only on tasks the user may move', async () => {
@@ -71,7 +71,7 @@ describe('WeekLineMap', () => {
 
     expect(api.patch).toHaveBeenCalledWith('/tasks/11', { status: 'IN_PROGRESS' });
     expect(await screen.findByText('Moved “Update onboarding guide” to In Progress.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Update onboarding guide, you, In progress/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Update onboarding guide\s*, you, In progress/ })).toBeInTheDocument();
     expect(onChanged).toHaveBeenCalled();
   });
 
@@ -82,7 +82,7 @@ describe('WeekLineMap', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Start' }));
 
     expect(await screen.findByText('You can only update the status of tasks assigned to you.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Update onboarding guide, you, To do/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Update onboarding guide\s*, you, To do/ })).toBeInTheDocument();
   });
 
   it('changes week with the navigation buttons', async () => {
@@ -137,7 +137,7 @@ describe('FocusTickets', () => {
         <FocusTickets items={items} />
       </MemoryRouter>,
     );
-    expect(screen.getByRole('link', { name: /Late task: Inventory report/ })).toHaveAttribute('href', '/tasks/3');
+    expect(screen.getByRole('link', { name: /Late task\s+Inventory report/ })).toHaveAttribute('href', '/tasks/3');
     rerender(
       <MemoryRouter>
         <FocusTickets items={[]} />

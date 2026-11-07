@@ -25,8 +25,9 @@ export default function IconRail({ onLogout }) {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-16 flex-col items-center border-r border-line bg-canvas/95 py-3 backdrop-blur lg:flex">
-      <Link to="/dashboard" className="rounded-xl" aria-label="FlowOps, go to Mission Control">
+      <Link to="/dashboard" className="rounded-xl">
         <LogoMark className="h-9 w-9" />
+        <span className="sr-only">FlowOps, go to Mission Control</span>
       </Link>
 
       <nav aria-label="Main navigation" className="mt-5 flex-1">
@@ -35,7 +36,6 @@ export default function IconRail({ onLogout }) {
             <li key={to}>
               <NavLink
                 to={to}
-                aria-label={label}
                 className={({ isActive }) =>
                   `${railButton} ${isActive ? 'bg-accent-soft text-accent' : 'text-faint hover:bg-hover hover:text-ink'}`
                 }
@@ -48,6 +48,7 @@ export default function IconRail({ onLogout }) {
                       aria-hidden="true"
                     />
                     <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+                    <span className="sr-only">{label}</span>
                     {showUnread && unreadCount > 0 && (
                       <span
                         className="absolute -top-0.5 -right-0.5 min-w-4 rounded-full bg-accent-strong px-1 text-center text-[10px] leading-4 font-semibold text-on-accent tabular-nums ring-2 ring-canvas"
@@ -68,14 +69,15 @@ export default function IconRail({ onLogout }) {
       <div className="flex flex-col items-center gap-2">
         <NavLink
           to="/profile"
-          aria-label="Profile"
           className={({ isActive }) => `${railButton} ${isActive ? 'ring-2 ring-accent' : 'hover:ring-2 hover:ring-line-strong'}`}
         >
           <Avatar name={user.name} size="md" />
+          <span className="sr-only">Profile</span>
           <RailLabel>Profile</RailLabel>
         </NavLink>
-        <button type="button" onClick={onLogout} aria-label="Log out" className={`${railButton} text-faint hover:bg-hover hover:text-ink`}>
+        <button type="button" onClick={onLogout} className={`${railButton} text-faint hover:bg-hover hover:text-ink`}>
           <LogOut className="h-4 w-4" aria-hidden="true" />
+          <span className="sr-only">Log out</span>
           <RailLabel>Log out</RailLabel>
         </button>
       </div>

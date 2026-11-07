@@ -137,7 +137,7 @@ function Palette({ onClose }) {
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Search and jump to"
+        aria-label="Search or jump to"
         className="relative w-full max-w-xl animate-scale-in overflow-hidden rounded-2xl border border-line bg-raised shadow-overlay"
       >
         <div className="flex items-center gap-3 border-b border-line px-4">

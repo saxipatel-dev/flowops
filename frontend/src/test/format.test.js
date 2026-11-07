@@ -84,6 +84,7 @@ describe('form validation', () => {
 
   it('describes how long something took', () => {
     const start = '2026-11-02T09:40:00.000Z';
+    expect(formatDuration(start, '2026-11-02T09:40:20.000Z')).toBe('less than a minute');
     expect(formatDuration(start, '2026-11-02T09:52:00.000Z')).toBe('12 minutes');
     expect(formatDuration(start, '2026-11-02T10:40:00.000Z')).toBe('1 hour');
     expect(formatDuration(start, '2026-11-03T13:52:00.000Z')).toBe('1 day, 4 hours');

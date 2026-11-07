@@ -1,4 +1,4 @@
-import { formatDateTime, formatTimeAgo, taskStatusLabels } from './format.js';
+import { formatDateTime, formatDuration, taskStatusLabels } from './format.js';
 
 // The stages a request travels through, built only from recorded fields.
 // Used by the request lines on Mission Control (and later by FlowMap).
@@ -67,7 +67,7 @@ export function describeStage(stage, request, viewerId) {
       return `Submitted by ${stage.actor || 'the requester'} · ${when}`;
     case 'review':
       return stage.state === 'current'
-        ? `With ${request.reviewer?.id === viewerId ? 'you' : stage.actor || 'the reviewer'} · waiting ${formatTimeAgo(request.createdAt).replace(' ago', '')}`
+        ? `With ${request.reviewer?.id === viewerId ? 'you' : stage.actor || 'the reviewer'} · waiting ${formatDuration(request.createdAt)}`
         : `Reviewed by ${request.decidedBy?.name || stage.actor || 'the reviewer'}`;
     case 'decision':
       if (stage.state === 'pending') return 'No decision yet';

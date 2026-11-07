@@ -51,9 +51,7 @@ function QueueItem({ request, selected, onSelect }) {
       <span className="flex shrink-0 flex-col items-end gap-1 border-l border-dashed border-line pl-3">
         <span className={`font-display text-lg leading-none font-bold ${waitTone(request.createdAt)}`}>{formatWait(request.createdAt)}</span>
         <span className="text-[11px] text-faint">waiting</span>
-        <span className="mt-1 rounded-md bg-accent-strong px-2 py-0.5 text-[11px] font-medium text-on-accent" aria-hidden="true">
-          Review
-        </span>
+        <span className="mt-1 rounded-md bg-accent-strong px-2 py-0.5 text-[11px] font-medium text-on-accent">Review</span>
       </span>
     </>
   );
@@ -62,10 +60,10 @@ function QueueItem({ request, selected, onSelect }) {
   }`;
   return (
     <li className="min-w-0">
-      <button type="button" onClick={onSelect} aria-pressed={selected} aria-label={`Review “${request.title}” from ${request.requester.name}`} className={`hidden lg:flex ${classes}`}>
+      <button type="button" onClick={onSelect} aria-pressed={selected} className={`hidden lg:flex ${classes}`}>
         {body}
       </button>
-      <Link to={`/requests/${request.id}`} aria-label={`Review “${request.title}” from ${request.requester.name}`} className={`flex lg:hidden ${classes}`}>
+      <Link to={`/requests/${request.id}`} className={`flex lg:hidden ${classes}`}>
         {body}
       </Link>
     </li>

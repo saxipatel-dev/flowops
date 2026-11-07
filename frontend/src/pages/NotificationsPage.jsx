@@ -199,7 +199,7 @@ export default function NotificationsPage() {
 
       <div className="mt-2 grid grid-cols-1 items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
         <aside className="card p-2" aria-label="Show">
-          <ul className="flex gap-1 overflow-x-auto lg:flex-col" role="group" aria-label="Show">
+          <ul className="flex gap-1 overflow-x-auto lg:flex-col">
             {filters.map((filter) => (
               <li key={filter.value} className="shrink-0">
                 <button

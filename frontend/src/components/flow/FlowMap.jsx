@@ -212,7 +212,6 @@ export default function FlowMap({ request, permissions, viewerId, compact = fals
                 data-stage={index}
                 tabIndex={active ? 0 : -1}
                 aria-pressed={active}
-                aria-label={`${item.label}: ${stateText[item.state]}. ${describeStage(item, request, viewerId)}`}
                 onClick={() => setSelected(index)}
                 className={`group relative z-10 flex w-full items-center gap-3 rounded-xl py-1.5 text-left sm:flex-col sm:gap-2 sm:text-center ${compact ? '' : 'sm:pb-2'}`}
               >
@@ -228,6 +227,10 @@ export default function FlowMap({ request, permissions, viewerId, compact = fals
                   <span className={`block font-display text-sm font-semibold ${active ? 'text-ink' : 'text-ink-2'}`}>{item.label}</span>
                   <span className="block truncate font-mono text-[11px] text-faint">
                     {item.at ? formatDateTime(item.at) : item.key === 'follow-up' && item.task ? taskStatusLabels[item.task.status] : stateText[item.state]}
+                  </span>
+                  {/* Screen readers also hear the stage's state and what happened there. */}
+                  <span className="sr-only">
+                    . {stateText[item.state]}. {describeStage(item, request, viewerId)}
                   </span>
                 </span>
               </button>

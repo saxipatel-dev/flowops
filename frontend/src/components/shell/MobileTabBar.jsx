@@ -90,7 +90,7 @@ export default function MobileTabBar({ onLogout }) {
           <NavLink
             key={to}
             to={to}
-            aria-label={label}
+            title={label}
             className={({ isActive }) => `${tabClasses} ${isActive ? 'text-accent' : 'text-faint hover:text-ink'}`}
           >
             <span className="relative">
@@ -101,7 +101,7 @@ export default function MobileTabBar({ onLogout }) {
                 </span>
               )}
             </span>
-            <span aria-hidden="true">{short}</span>
+            <span>{short}</span>
           </NavLink>
         ))}
         <button

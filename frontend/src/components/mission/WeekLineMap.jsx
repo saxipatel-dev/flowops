@@ -50,10 +50,10 @@ function rangeLabel(startKey) {
   return `${dayLabel(startKey, { day: 'numeric', month: 'short' })} – ${dayLabel(endKey, { day: 'numeric', month: 'short' })}`;
 }
 
+// The short state under a stop. It is also part of the stop's accessible name.
 function stopMeta(task, state) {
-  if (state === 'done') return 'Done';
   if (state === 'late') return formatDueLabel(task.dueDate).replace('Overdue by ', '').replace(' days', 'd').replace(' day', 'd') + ' late';
-  return state === 'progress' ? 'In progress' : task.priority === 'HIGH' ? 'High priority' : 'To do';
+  return stateText[state];
 }
 
 function Station({ stop, selected, pulsing, onSelect, line }) {
@@ -64,7 +64,6 @@ function Station({ stop, selected, pulsing, onSelect, line }) {
       type="button"
       onClick={() => onSelect(task.id)}
       aria-pressed={selected}
-      aria-label={`${task.title}, ${line.isMe ? 'you' : line.user.name}, ${stateText[state]}, ${formatDueLabel(task.dueDate)}`}
       className={`group absolute z-30 flex flex-col gap-1.5 rounded-lg text-left ${alignEnd ? 'items-end text-right' : 'items-start'}`}
       style={{
         left: across(weekPosition(dayIndex)),
@@ -78,9 +77,12 @@ function Station({ stop, selected, pulsing, onSelect, line }) {
         } ${pulsing ? 'animate-pulse-ring' : ''}`}
         aria-hidden="true"
       />
-      <span className="max-w-[84px] rounded bg-surface/85 pr-1 text-[11px] leading-tight" aria-hidden="true">
+      {/* The visible title and state name the stop; who and when are added for screen readers. */}
+      <span className="max-w-[84px] rounded bg-surface/85 pr-1 text-[11px] leading-tight">
         <span className={`line-clamp-2 font-medium ${selected ? 'text-ink' : 'text-ink-2'}`}>{task.title}</span>
+        <span className="sr-only">, {line.isMe ? 'you' : line.user.name}, </span>
         <span className={state === 'late' ? 'text-bad' : 'text-faint'}>{stopMeta(task, state)}</span>
+        <span className="sr-only">, {formatDueLabel(task.dueDate)}</span>
       </span>
     </button>
   );
@@ -150,8 +152,7 @@ function ApprovalDesk({ requests, startKey, nowPosition, selectedId, onSelect })
             type="button"
             onClick={() => onSelect(id)}
             aria-pressed={selected}
-            aria-label={`${request.title}, waiting for your decision since ${submitted.toLocaleDateString()}`}
-            className={`absolute z-10 h-3 rounded-full border bg-gradient-to-r from-warn/15 to-warn/60 transition-shadow ${
+            className={`absolute z-30 h-3 rounded-full border bg-gradient-to-r from-warn/15 to-warn/60 transition-shadow ${
               selected ? 'border-accent shadow-glow' : 'border-warn/60 hover:border-warn'
             }`}
             style={{
@@ -160,9 +161,15 @@ function ApprovalDesk({ requests, startKey, nowPosition, selectedId, onSelect })
               width: `max(10px, calc((100% - ${LABEL_WIDTH}px) * ${Math.max(0, nowPosition - startPosition)}))`,
             }}
           >
-            <span className="absolute top-3.5 left-0 rounded bg-surface/85 pr-1 text-[11px] whitespace-nowrap text-muted">
-              <span className="text-warn">{request.title.length > 28 ? `${request.title.slice(0, 27)}…` : request.title}</span>
-              {dayIndex < 0 && ' · since last week'}
+            {/* Bars that start late in the week label leftwards from NOW, so the text stays inside the map. */}
+            <span
+              className={`absolute top-3.5 flex max-w-[220px] rounded bg-surface/90 px-1 text-[11px] whitespace-nowrap text-muted ${
+                startPosition > 0.55 ? 'right-0' : '-left-1'
+              }`}
+            >
+              <span className="truncate text-warn">{request.title}</span>
+              {dayIndex < 0 && <span className="shrink-0">&nbsp;· since last week</span>}
+              <span className="sr-only">, waiting for your decision since {submitted.toLocaleDateString()}</span>
             </span>
           </button>
         );

@@ -51,9 +51,11 @@ test('request is submitted, approved, and its follow-up task is completed', asyn
   // Manager approves it and assigns the follow-up task back to Maya
   await login(page, 'daniel@flowops.test');
   await page.getByRole('link', { name: 'Approvals' }).click();
+  await expect(page).toHaveURL(/\/approvals/);
   // The approval desk opens the request in its review pane, next to the queue.
-  const row = page.getByRole('listitem').filter({ hasText: 'Ergonomic keyboard' });
-  await row.getByRole('button', { name: /^Review/ }).click();
+  const queue = page.getByRole('list', { name: 'Requests waiting for your decision' });
+  const row = queue.getByRole('listitem').filter({ hasText: 'Ergonomic keyboard' });
+  await row.getByRole('button').click();
   const pane = page.getByRole('region', { name: 'Review' });
 
   await pane.getByRole('button', { name: 'Reject', exact: true }).click();
@@ -133,7 +135,7 @@ test('navigation works on a phone-sized screen', async ({ page }) => {
 
 test('the command palette finds only records the user can open', async ({ page }) => {
   await login(page, 'priya@flowops.test');
-  await page.getByRole('button', { name: 'Search and jump to' }).waitFor();
+  await page.getByRole('button', { name: 'Search or jump to' }).waitFor();
   await page.keyboard.press('ControlOrMeta+k');
   const search = page.getByRole('combobox', { name: 'Search' });
   await expect(search).toBeFocused();
@@ -145,7 +147,7 @@ test('the command palette finds only records the user can open', async ({ page }
   // An employee in another department gets no result for the same search.
   await logout(page);
   await login(page, 'maya@flowops.test');
-  await page.getByRole('button', { name: 'Search and jump to' }).click();
+  await page.getByRole('button', { name: 'Search or jump to' }).click();
   await page.getByRole('combobox', { name: 'Search' }).fill('laptops');
   await expect(page.getByText('No tasks or requests match “laptops”.')).toBeVisible();
 });
@@ -156,7 +158,7 @@ test('mission control moves a task from the week map', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Operations Pulse' })).toBeVisible();
 
   // Seed due dates are relative to today, so look ahead week by week for one of Maya's open tasks.
-  const openStop = page.getByRole('button', { name: /, you, To do,/ }).first();
+  const openStop = page.getByRole('button', { name: /\s*, you, To do\s*,/ }).first();
   const appears = () => openStop.waitFor({ state: 'visible', timeout: 1500 }).then(() => true, () => false);
   for (let week = 0; week < 4 && !(await appears()); week++) {
     // Wait for that week's tasks to arrive before looking again.
@@ -165,12 +167,12 @@ test('mission control moves a task from the week map', async ({ page }) => {
       page.getByRole('button', { name: 'Next week' }).click(),
     ]);
   }
-  const label = await openStop.getAttribute('aria-label');
-  const title = label.split(', you,')[0];
+  // The stop's visible title is its first line.
+  const title = (await openStop.locator('.line-clamp-2').innerText()).trim();
   await openStop.click();
   await page.getByRole('button', { name: 'Start', exact: true }).click();
   await expect(page.getByText(`Moved “${title}” to In Progress.`)).toBeVisible();
-  await expect(page.getByRole('button', { name: new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}, you, In progress`) })).toBeVisible();
+  await expect(page.getByRole('button', { name: new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*, you, In progress`) })).toBeVisible();
 
   // The change is saved, not just drawn.
   await page.getByRole('link', { name: 'Open task' }).click();
@@ -269,7 +271,7 @@ test('decision journey shows recorded stages, works by keyboard, and turns verti
 
   // A finished request opens on its last stage, with the recorded completion time.
   await expect(stops.nth(4)).toHaveAttribute('aria-pressed', 'true');
-  await expect(stops.nth(4)).toHaveAccessibleName(/^Completed: Done\. Completed · /);
+  await expect(stops.nth(4)).toHaveAccessibleName(/^Completed\b[\s\S]*\. Done\. Completed · /);
 
   // Arrow keys move along the line; the follow-up stage links to Maya's own task.
   await stops.nth(4).focus();

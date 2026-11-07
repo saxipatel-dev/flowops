@@ -18,7 +18,6 @@ function Ticket({ item }) {
     <Link
       to={item.to}
       className="ticket group grid min-h-[84px] grid-cols-[minmax(0,1fr)_68px] rounded-xl bg-raised transition-[transform,background-color] duration-200 hover:-translate-y-0.5 hover:bg-hover focus-visible:-translate-y-0.5"
-      aria-label={`${kind.label}: ${item.title}. ${detail}. ${item.stub.value} ${item.stub.label}`}
     >
       <span className="flex min-w-0 flex-col gap-1 border-r-[1.5px] border-dashed border-line py-2.5 pr-3 pl-4">
         <span className={`font-mono text-[10px] font-medium tracking-[0.12em] uppercase ${kind.text}`}>{kind.label}</span>
