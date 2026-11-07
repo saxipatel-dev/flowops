@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "screenshots": "SCREENSHOTS=1 playwright test e2e/screenshots.spec.js"
+    "screenshots": "SCREENSHOTS=1 playwright test e2e/screenshots.spec.js",
+    "demo": "DEMO=1 playwright test e2e/demo.spec.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
