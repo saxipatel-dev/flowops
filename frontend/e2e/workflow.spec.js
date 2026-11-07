@@ -51,19 +51,22 @@ test('request is submitted, approved, and its follow-up task is completed', asyn
   // Manager approves it and assigns the follow-up task back to Maya
   await login(page, 'daniel@flowops.test');
   await page.getByRole('link', { name: 'Approvals' }).click();
+  // The approval desk opens the request in its review pane, next to the queue.
   const row = page.getByRole('listitem').filter({ hasText: 'Ergonomic keyboard' });
-  await row.getByRole('link', { name: 'Review' }).click();
+  await row.getByRole('button', { name: /^Review/ }).click();
+  const pane = page.getByRole('region', { name: 'Review' });
 
-  await page.getByRole('button', { name: 'Reject' }).click();
-  await expect(page.getByText('Please give a reason for the rejection')).toBeVisible();
+  await pane.getByRole('button', { name: 'Reject', exact: true }).click();
+  await expect(pane.getByText('Please give a reason for the rejection')).toBeVisible();
 
-  await page.getByLabel('Comment or rejection reason').fill('Approved, please order the standard model.');
-  await page.getByLabel('Assign task to').selectOption({ label: 'Maya Chen' });
-  await page.getByRole('button', { name: 'Approve' }).click();
+  await pane.getByLabel('Comment or rejection reason').fill('Approved, please order the standard model.');
+  await pane.getByLabel('Assign task to').selectOption({ label: 'Maya Chen' });
+  await pane.getByRole('button', { name: 'Approve', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Approve' }).click();
-  await expect(page.getByText('Request approved.')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Fulfil request: Ergonomic keyboard' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Approve' })).toHaveCount(0);
+  await expect(pane.getByText('Request approved.')).toBeVisible();
+  // The journey now runs on to the follow-up task, which the manager can open.
+  await expect(pane.getByRole('link', { name: 'Fulfil request: Ergonomic keyboard' }).first()).toBeVisible();
+  await expect(pane.getByRole('button', { name: 'Approve', exact: true })).toHaveCount(0);
   await logout(page);
 
   // Employee sees the notification and completes the task
@@ -154,9 +157,13 @@ test('mission control moves a task from the week map', async ({ page }) => {
 
   // Seed due dates are relative to today, so look ahead week by week for one of Maya's open tasks.
   const openStop = page.getByRole('button', { name: /, you, To do,/ }).first();
-  for (let week = 0; week < 4 && !(await openStop.isVisible()); week++) {
-    await page.getByRole('button', { name: 'Next week' }).click();
-    await page.waitForLoadState('networkidle');
+  const appears = () => openStop.waitFor({ state: 'visible', timeout: 1500 }).then(() => true, () => false);
+  for (let week = 0; week < 4 && !(await appears()); week++) {
+    // Wait for that week's tasks to arrive before looking again.
+    await Promise.all([
+      page.waitForResponse((response) => response.url().includes('/api/dashboard/timeline')),
+      page.getByRole('button', { name: 'Next week' }).click(),
+    ]);
   }
   const label = await openStop.getAttribute('aria-label');
   const title = label.split(', you,')[0];
@@ -250,4 +257,31 @@ test('task panel opens from the timeline, survives a reload, and Back closes it'
   await expect(page.getByRole('dialog', { name: title })).toBeVisible();
   await page.goBack();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('decision journey shows recorded stages, works by keyboard, and turns vertical on phones', async ({ page }) => {
+  await login(page, 'maya@flowops.test');
+  await page.goto('/requests');
+  await page.getByRole('link', { name: 'Office supplies restock' }).click();
+  const journey = page.getByRole('list', { name: /Request journey/ });
+  const stops = journey.getByRole('button');
+  await expect(stops).toHaveCount(5);
+
+  // A finished request opens on its last stage, with the recorded completion time.
+  await expect(stops.nth(4)).toHaveAttribute('aria-pressed', 'true');
+  await expect(stops.nth(4)).toHaveAccessibleName(/^Completed: Done\. Completed · /);
+
+  // Arrow keys move along the line; the follow-up stage links to Maya's own task.
+  await stops.nth(4).focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(stops.nth(3)).toBeFocused();
+  await expect(stops.nth(3)).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('link', { name: 'Fulfil request: Office supplies restock' }).last()).toBeVisible();
+
+  // On a phone the stops stack into a vertical journey.
+  await page.setViewportSize({ width: 375, height: 812 });
+  const first = await stops.nth(0).boundingBox();
+  const last = await stops.nth(4).boundingBox();
+  expect(Math.abs(first.x - last.x)).toBeLessThan(2);
+  expect(last.y).toBeGreaterThan(first.y + 150);
 });

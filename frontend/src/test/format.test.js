@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatCurrency, formatDate, formatDueLabel, formatTimeAgo, groupByDay, isOverdue, localDayKey, requestCode } from '../services/format.js';
+import { formatCurrency, formatDate, formatDuration, formatDueLabel, formatTimeAgo, groupByDay, isOverdue, localDayKey, requestCode } from '../services/format.js';
 import { validateRequest } from '../pages/NewRequestPage.jsx';
 import { validateLogin } from '../pages/LoginPage.jsx';
 
@@ -80,5 +80,13 @@ describe('form validation', () => {
     expect(validateRequest({ ...valid, title: '' }).title).toBeDefined();
     expect(validateRequest({ ...valid, estimatedCost: '-5' }).estimatedCost).toBeDefined();
     expect(validateRequest({ ...valid, category: '' }).category).toBe('Choose a category');
+  });
+
+  it('describes how long something took', () => {
+    const start = '2026-11-02T09:40:00.000Z';
+    expect(formatDuration(start, '2026-11-02T09:52:00.000Z')).toBe('12 minutes');
+    expect(formatDuration(start, '2026-11-02T10:40:00.000Z')).toBe('1 hour');
+    expect(formatDuration(start, '2026-11-03T13:52:00.000Z')).toBe('1 day, 4 hours');
+    expect(formatDuration(start, '2026-11-05T09:40:00.000Z')).toBe('3 days');
   });
 });

@@ -183,3 +183,37 @@ describe('approvals', () => {
     await prisma.user.update({ where: { id: daniel.id }, data: { role: 'MANAGER' } });
   });
 });
+
+describe('request detail permissions for the decision journey', () => {
+  it('says whether approving creates a follow-up task', async () => {
+    const daniel = await findUser('daniel@flowops.test');
+    const manager = await loginAs('daniel@flowops.test');
+    const equipment = await prisma.request.findFirst({ where: { reviewerId: daniel.id, category: 'EQUIPMENT' } });
+    const support = await prisma.request.findFirst({ where: { category: { in: ['IT_SUPPORT', 'GENERAL_OPERATIONS'] } } });
+    expect((await manager.get(`/api/requests/${equipment.id}`)).body.permissions.createsFollowUpTask).toBe(true);
+    const admin = await loginAs('admin@flowops.test');
+    expect((await admin.get(`/api/requests/${support.id}`)).body.permissions.createsFollowUpTask).toBe(false);
+  });
+
+  it('only lets people open the follow-up task when they are allowed to', async () => {
+    const withTask = await prisma.request.findFirst({ where: { task: { isNot: null } }, include: { task: true, requester: true } });
+    const requester = await loginAs(withTask.requester.email);
+    const asRequester = await requester.get(`/api/requests/${withTask.id}`);
+    const direct = await requester.get(`/api/tasks/${withTask.task.id}`);
+    expect(asRequester.body.permissions.canViewFollowUpTask).toBe(direct.status === 200);
+
+    const admin = await loginAs('admin@flowops.test');
+    expect((await admin.get(`/api/requests/${withTask.id}`)).body.permissions.canViewFollowUpTask).toBe(true);
+  });
+});
+
+describe('request list order', () => {
+  it('lists newest first by default and oldest first on request', async () => {
+    const admin = await loginAs('admin@flowops.test');
+    const times = (body) => body.requests.map((request) => new Date(request.createdAt).getTime());
+    const newest = times((await admin.get('/api/requests?scope=team')).body);
+    expect(newest).toEqual([...newest].sort((a, b) => b - a));
+    const oldest = times((await admin.get('/api/requests?scope=team&sort=oldest')).body);
+    expect(oldest).toEqual([...oldest].sort((a, b) => a - b));
+  });
+});

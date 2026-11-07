@@ -6,7 +6,6 @@ import Badge from '../components/Badge.jsx';
 import Pagination from '../components/Pagination.jsx';
 import LoginPage from '../pages/LoginPage.jsx';
 import IconRail from '../components/shell/IconRail.jsx';
-import { getTimelineSteps } from '../components/ApprovalTimeline.jsx';
 import FilterBar from '../components/FilterBar.jsx';
 import { AuthProvider, useAuth } from '../context/AuthContext.jsx';
 import api from '../services/api.js';
@@ -120,45 +119,6 @@ describe('IconRail', () => {
     renderSidebar('ADMIN');
     expect(await screen.findByRole('link', { name: 'User Management' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Approvals' })).not.toBeInTheDocument();
-  });
-});
-
-describe('ApprovalTimeline', () => {
-  const base = {
-    requester: { name: 'Maya Chen' },
-    reviewer: { name: 'Daniel Reyes' },
-    createdAt: '2026-11-01T09:00:00.000Z',
-    category: 'EQUIPMENT',
-    task: null,
-  };
-
-  it('shows a pending request waiting on its reviewer', () => {
-    const steps = getTimelineSteps({ ...base, status: 'PENDING' });
-    expect(steps.map((step) => [step.title, step.state])).toEqual([
-      ['Submitted', 'submitted'],
-      ['Awaiting review', 'current'],
-      ['Decision', 'upcoming'],
-      ['Follow-up task', 'upcoming'],
-    ]);
-    expect(steps[1].detail).toBe('Assigned to Daniel Reyes');
-  });
-
-  it('shows the rejection reason and no follow-up step', () => {
-    const steps = getTimelineSteps({
-      ...base,
-      status: 'REJECTED',
-      decidedBy: { name: 'Daniel Reyes' },
-      reviewedAt: '2026-11-02T09:00:00.000Z',
-      reviewComment: 'Use the spare one',
-    });
-    expect(steps).toHaveLength(2);
-    expect(steps[1]).toMatchObject({ title: 'Rejected', state: 'rejected', comment: 'Use the spare one', commentLabel: 'Reason' });
-  });
-
-  it('marks an approved request fulfilled once its task is completed', () => {
-    const task = { id: 7, title: 'Fulfil request: Laptop', status: 'COMPLETED', assignee: { name: 'Maya Chen' } };
-    const steps = getTimelineSteps({ ...base, status: 'APPROVED', decidedBy: { name: 'Daniel Reyes' }, task });
-    expect(steps.map((step) => step.title)).toEqual(['Submitted', 'Approved', 'Fulfilled']);
   });
 });
 

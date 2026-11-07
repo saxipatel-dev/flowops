@@ -4,7 +4,7 @@ import { badRequest, conflict, forbidden, notFound } from '../utils/httpError.js
 import { userSummary } from '../utils/selects.js';
 import { getPage, PAGE_SIZE } from '../utils/pagination.js';
 import { parseId } from '../utils/parseId.js';
-import { canViewRequest, canAssignTo, getVisibleRequestFilter } from '../services/accessService.js';
+import { canAssignTo, canViewRequest, canViewTask, getVisibleRequestFilter } from '../services/accessService.js';
 import { logActivity, notify } from '../services/activityService.js';
 import { DAY_IN_MS, localDayKey, localToday } from '../utils/dates.js';
 
@@ -83,7 +83,8 @@ export async function listRequests(req, res) {
 
   const { page, skip, take } = getPage(req.query);
   const [requests, total] = await Promise.all([
-    prisma.request.findMany({ where, include: requestInclude, orderBy: { createdAt: 'desc' }, skip, take }),
+    // Newest first by default; the approval desk asks for the longest-waiting first.
+    prisma.request.findMany({ where, include: requestInclude, orderBy: { createdAt: req.query.sort === 'oldest' ? 'asc' : 'desc' }, skip, take }),
     prisma.request.count({ where }),
   ]);
 
@@ -96,7 +97,9 @@ export async function getRequest(req, res) {
     where: { id },
     include: {
       ...requestInclude,
-      task: { select: { id: true, title: true, status: true, completedAt: true, assignee: { select: userSummary } } },
+      task: {
+        select: { id: true, title: true, status: true, completedAt: true, assignedTo: true, createdBy: true, assignee: { select: userSummary } },
+      },
       comments: { include: { user: { select: userSummary } }, orderBy: { createdAt: 'asc' } },
     },
   });
@@ -117,6 +120,10 @@ export async function getRequest(req, res) {
     activity,
     permissions: {
       canDecide: request.status === 'PENDING' && request.reviewerId === req.user.id && req.user.role === 'MANAGER',
+      // Whether approving creates a follow-up task, so the page never repeats this rule.
+      createsFollowUpTask: FOLLOW_UP_CATEGORIES.includes(request.category),
+      // The requester can always see the request, but not always its follow-up task.
+      canViewFollowUpTask: request.task ? await canViewTask(req.user, request.task) : false,
     },
   });
 }

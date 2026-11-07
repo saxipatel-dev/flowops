@@ -7,12 +7,13 @@ import Card, { CardHeader } from './Card.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
 import { FormField, SelectInput } from './FormField.jsx';
 import { ErrorMessage } from './Feedback.jsx';
+import { formatDate, localDayKey } from '../services/format.js';
 
-const FOLLOW_UP_CATEGORIES = ['EQUIPMENT', 'PURCHASE'];
-
-export default function DecisionForm({ request, onDecided }) {
+// The server says whether approving creates a follow-up task (createsFollowUpTask),
+// and it validates every decision; this form only collects and explains it.
+export default function DecisionForm({ request, createsFollowUpTask, onDecided }) {
   const { user } = useAuth();
-  const needsFollowUp = FOLLOW_UP_CATEGORIES.includes(request.category);
+  const needsFollowUp = Boolean(createsFollowUpTask);
   const [reason, setReason] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -64,7 +65,7 @@ export default function DecisionForm({ request, onDecided }) {
   }
 
   return (
-    <Card className="ring-2 ring-accent/25">
+    <Card id="decision" className="scroll-mt-20 ring-2 ring-accent/25">
       <CardHeader title="Review this request" description="Your decision is shared with the requester." icon={ClipboardCheck} />
       <div className="space-y-4 p-4">
         <ErrorMessage message={error} />
@@ -80,7 +81,7 @@ export default function DecisionForm({ request, onDecided }) {
                 <SelectInput id="assigneeId" options={assignees} placeholder="Myself" value={assigneeId} onChange={(event) => setAssigneeId(event.target.value)} />
               </FormField>
               <FormField label="Task due date" htmlFor="dueDate" hint="Defaults to one week from today." error={fieldErrors.dueDate}>
-                <input id="dueDate" type="date" className="input" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
+                <input id="dueDate" type="date" min={localDayKey()} className="input" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
               </FormField>
             </div>
           </div>
@@ -93,6 +94,26 @@ export default function DecisionForm({ request, onDecided }) {
           <Button variant="dangerOutline" icon={X} onClick={() => startDecision('reject')}>
             Reject
           </Button>
+        </div>
+
+        <div className="rounded-lg border border-line-soft bg-sunken px-3.5 py-3 text-xs">
+          <p className="eyebrow mb-2">What happens next</p>
+          <ul className="space-y-1.5 text-muted">
+            <li>
+              <span className="font-medium text-ok">Approve:</span> {request.requester.name} is notified.
+              {needsFollowUp && (
+                <>
+                  {' '}
+                  A task <span className="text-ink-2">“Fulfil request: {request.title}”</span> is created for{' '}
+                  <span className="text-ink-2">{assignees.find((person) => person.value === assigneeId)?.label || 'you'}</span>, due{' '}
+                  {dueDate ? <span className="font-mono text-ink-2">{formatDate(dueDate)}</span> : <span className="text-ink-2">in one week</span>}.
+                </>
+              )}
+            </li>
+            <li>
+              <span className="font-medium text-bad">Reject:</span> {request.requester.name} is notified with your reason. Nothing else is created.
+            </li>
+          </ul>
         </div>
       </div>
 

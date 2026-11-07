@@ -102,3 +102,14 @@ export function groupByDay(items, now = new Date()) {
   }
   return groups;
 }
+
+// "3 days, 4 hours", "5 hours", "12 minutes": the time between two moments.
+export function formatDuration(from, to = new Date()) {
+  const minutes = Math.max(0, Math.round((new Date(to) - new Date(from)) / 60000));
+  const days = Math.floor(minutes / 1440);
+  const hours = Math.floor((minutes % 1440) / 60);
+  const plural = (count, unit) => `${count} ${unit}${count === 1 ? '' : 's'}`;
+  if (days > 0) return hours > 0 ? `${plural(days, 'day')}, ${plural(hours, 'hour')}` : plural(days, 'day');
+  if (hours > 0) return plural(hours, 'hour');
+  return plural(minutes, 'minute');
+}
