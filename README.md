@@ -127,6 +127,8 @@ Requirements: Node.js 20+, npm, and Docker.
 
 The tests use `backend/.env.test` (copied from `.env.test.example`), which points at `flowops_test`. Neither `.env` file is committed.
 
+The frontend needs no environment file. Its dev server forwards `/api` to `http://localhost:4000`; set `API_PROXY_TARGET` to use a different API address (the end-to-end tests use this for their own servers).
+
 ### Demo accounts
 
 All seeded accounts use the password `Password123!`. The people and data are fictional.
@@ -174,8 +176,8 @@ npm run screenshots
 
 - Every interactive visual works by keyboard. The week map's stops, FlowMap's stages (arrow keys, Home, End), heatmap cells and board cards (Space to pick up, arrows to move, Space to drop) all have keyboard access, with screen-reader announcements for drag and drop.
 - Dialogs and panels trap focus, close on Escape and return focus to where you were. A skip link leads to the page content.
-- Text colours meet WCAG AA contrast on every surface; secondary text is at least 5.8:1.
-- Layouts are checked at 320, 390, 820, 1024 and 1440 px wide with no horizontal scrolling.
+- Text colours meet WCAG AA contrast on every surface; secondary text stays above 5:1, including on hover backgrounds.
+- Layouts were reviewed at 320, 390, 820, 1024 and 1440 px wide with no horizontal scrolling, and the automated accessibility tests scan phone layouts too.
 
 ## Known limitations
 
