@@ -222,6 +222,27 @@
       radial-gradient(circle at 100% var(--notch-y), transparent 7px, #000 7.5px) right / 51% 100% no-repeat;
   }
 
+  /* Sign-in illustration: lines draw in, stops appear in order. */
+  .login-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: login-draw 900ms var(--ease-out-soft) forwards;
+  }
+  .login-stop {
+    opacity: 0;
+    animation: login-stop 300ms ease-out forwards;
+  }
+  @keyframes login-draw {
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes login-stop {
+    to { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .login-draw { stroke-dashoffset: 0; animation: none; }
+    .login-stop { opacity: 1; animation: none; }
+  }
+
   /* Small uppercase label used above sections and in data rows */
   .eyebrow {
     @apply font-mono text-[11px] font-medium tracking-[0.12em] text-faint uppercase;

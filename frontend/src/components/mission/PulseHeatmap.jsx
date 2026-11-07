@@ -1,18 +1,12 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { useApi } from '../../hooks/useApi.js';
-import { heatLevel } from '../../services/missionControl.js';
+import HeatGrid, { HeatLegend, longDate } from '../HeatGrid.jsx';
 import ActivityList from '../ActivityList.jsx';
 import { ErrorMessage, Loading } from '../Feedback.jsx';
 
 const DAYS = 91;
-const levelStyles = ['bg-hover', 'bg-accent/25', 'bg-accent/45', 'bg-accent/70', 'bg-accent'];
-const weekdayLetters = ['M', '', 'W', '', 'F', '', 'S'];
 const weekdayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-function longDate(key) {
-  return new Date(`${key}T00:00:00Z`).toLocaleDateString('en-GB', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' });
-}
 
 function DayEvents({ date, utcOffset }) {
   const { data, error, reload } = useApi('/activity', { date, utcOffset });
@@ -24,8 +18,8 @@ function DayEvents({ date, utcOffset }) {
       {data.total > data.activity.length && (
         <p className="border-t border-line-soft px-4 py-2.5 text-xs text-faint">
           {data.total - data.activity.length} more on this day.{' '}
-          <Link to="/activity" className="link">
-            Open activity
+          <Link to={`/activity?date=${date}`} className="link">
+            See the whole day in History
           </Link>
         </p>
       )}
@@ -39,29 +33,12 @@ export default function PulseHeatmap() {
   const utcOffset = useMemo(() => -new Date().getTimezoneOffset(), []);
   const { data, error, reload } = useApi('/activity/summary', { days: DAYS, utcOffset });
   const [picked, setPicked] = useState(null);
-  const gridRef = useRef(null);
 
   const days = data?.days || [];
-  const max = Math.max(0, ...days.map((day) => day.count));
-  // Weeks run Monday to Sunday, so the first column may start part-way down.
-  const padding = days.length ? (new Date(`${days[0].date}T00:00:00Z`).getUTCDay() + 6) % 7 : 0;
   const lastActive = days.findLastIndex((day) => day.count > 0);
   const selected = picked ?? (lastActive >= 0 ? lastActive : days.length - 1);
   const busiest = days.reduce((best, day) => (day.count > (best?.count || 0) ? day : best), null);
   const activeDays = days.filter((day) => day.count > 0).length;
-
-  function pick(index) {
-    const next = Math.max(0, Math.min(days.length - 1, index));
-    setPicked(next);
-    gridRef.current?.querySelector(`[data-index="${next}"]`)?.focus();
-  }
-
-  function handleKeyDown(event) {
-    const moves = { ArrowUp: -1, ArrowDown: 1, ArrowLeft: -7, ArrowRight: 7, Home: -days.length, End: days.length };
-    if (moves[event.key] === undefined) return;
-    event.preventDefault();
-    pick(selected + moves[event.key]);
-  }
 
   // Events per weekday across the whole range (Monday first): the team's weekly rhythm.
   const weekdayTotals = [0, 0, 0, 0, 0, 0, 0];
@@ -106,47 +83,9 @@ export default function PulseHeatmap() {
         <div className="grid items-start lg:grid-cols-[auto_minmax(0,1fr)] lg:divide-x lg:divide-line">
           <div className="flex flex-wrap gap-x-8 gap-y-4 px-4 py-4 sm:px-5 lg:flex-col">
             <div>
-              <div className="flex gap-2">
-                <div className="grid grid-rows-7 gap-[3px] font-mono text-[9px] leading-[13px] text-faint lg:leading-4" aria-hidden="true">
-                  {weekdayLetters.map((letter, index) => (
-                    <span key={index}>{letter}</span>
-                  ))}
-                </div>
-                <div
-                  ref={gridRef}
-                  role="group"
-                  aria-label="Events per day. Use the arrow keys to move between days."
-                  onKeyDown={handleKeyDown}
-                  className="grid grid-flow-col grid-rows-7 gap-[3px]"
-                >
-                  {Array.from({ length: padding }, (_, index) => (
-                    <span key={`pad-${index}`} className="h-[13px] w-[13px] lg:h-4 lg:w-4" aria-hidden="true" />
-                  ))}
-                  {days.map((day, index) => {
-                    const isSelected = index === selected;
-                    return (
-                      <button
-                        key={day.date}
-                        type="button"
-                        data-index={index}
-                        tabIndex={isSelected ? 0 : -1}
-                        onClick={() => pick(index)}
-                        aria-pressed={isSelected}
-                        aria-label={`${longDate(day.date)}: ${day.count} ${day.count === 1 ? 'event' : 'events'}`}
-                        className={`h-[13px] w-[13px] rounded-[3px] transition-transform duration-100 hover:scale-125 lg:h-4 lg:w-4 ${levelStyles[heatLevel(day.count, max)]} ${
-                          isSelected ? 'outline-2 outline-offset-1 outline-ink' : ''
-                        }`}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-faint" aria-hidden="true">
-                Less
-                {levelStyles.map((style) => (
-                  <span key={style} className={`h-[11px] w-[11px] rounded-[3px] ${style}`} />
-                ))}
-                More
+              <HeatGrid days={days} selected={selected} onPick={setPicked} />
+              <div className="mt-2.5">
+                <HeatLegend />
               </div>
             </div>
 

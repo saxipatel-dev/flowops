@@ -285,3 +285,54 @@ test('decision journey shows recorded stages, works by keyboard, and turns verti
   expect(Math.abs(first.x - last.x)).toBeLessThan(2);
   expect(last.y).toBeGreaterThan(first.y + 150);
 });
+
+test('the sign-in page loads no operational data', async ({ page }) => {
+  const apiCalls = [];
+  page.on('request', (request) => request.url().includes('/api/') && apiCalls.push(new URL(request.url()).pathname));
+  await page.goto('/login');
+  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
+  await page.waitForLoadState('networkidle');
+  expect([...new Set(apiCalls)]).toEqual(['/api/auth/me']);
+});
+
+test('history filters by the day picked on the pulse and keeps it after a reload', async ({ page }) => {
+  await login(page, 'maya@flowops.test');
+  await page.getByRole('link', { name: 'Activity', exact: true }).click();
+  const busyDay = page.getByRole('button', { name: /: [1-9]\d* events?$/ }).last();
+  const label = await busyDay.getAttribute('aria-label');
+  const count = Number(label.match(/: (\d+) event/)[1]);
+  await busyDay.click();
+  await expect(page).toHaveURL(/date=\d{4}-\d{2}-\d{2}/);
+  await expect(page.getByText(new RegExp(`^${count} events? on `))).toBeVisible();
+  await page.reload();
+  await expect(page.getByText(new RegExp(`^${count} events? on `))).toBeVisible();
+  await page.getByRole('button', { name: /All days/ }).click();
+  await expect(page).not.toHaveURL(/date=/);
+});
+
+test('inbox marks an update as read and it stays read', async ({ page }) => {
+  await login(page, 'maya@flowops.test');
+  await page.getByRole('link', { name: 'Notifications', exact: true }).click();
+  await expect(page.getByText(/not pushed live/)).toBeVisible();
+  const lane = page.locator('section', { has: page.getByRole('heading', { name: /^Unread/ }) });
+  await expect(lane.getByRole('listitem').first()).toBeVisible();
+  const before = await lane.getByRole('listitem').count();
+  expect(before).toBeGreaterThan(0);
+  await lane.getByRole('button', { name: /Mark as read/ }).first().click();
+  await expect(lane.getByRole('listitem')).toHaveCount(before - 1);
+  await page.reload();
+  if (before > 1) await expect(lane.getByRole('listitem')).toHaveCount(before - 1);
+  else await expect(page.getByRole('heading', { name: /^Unread/ })).toHaveCount(0);
+});
+
+test('admins edit people in the side panel', async ({ page }) => {
+  await login(page, 'admin@flowops.test');
+  await page.goto('/users');
+  await page.getByRole('button', { name: 'Edit Sam Okafor' }).click();
+  const panel = page.getByRole('dialog', { name: 'Edit Sam Okafor' });
+  await panel.getByLabel('Job title').fill('Senior Systems Administrator');
+  await panel.getByRole('button', { name: 'Save changes' }).click();
+  await expect(page.getByText('Sam Okafor was updated.')).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByText('Senior Systems Administrator')).toBeVisible();
+});

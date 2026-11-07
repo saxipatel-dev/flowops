@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
+import { useApi } from '../hooks/useApi.js';
 import { Building2, CalendarDays, Check, KeyRound, Mail, UserRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import api, { getErrorMessage, getFieldErrors } from '../services/api.js';
@@ -6,7 +8,7 @@ import PageHeader from '../components/PageHeader.jsx';
 import Button from '../components/Button.jsx';
 import Badge from '../components/Badge.jsx';
 import Card, { CardHeader } from '../components/Card.jsx';
-import Avatar from '../components/Avatar.jsx';
+import Avatar, { avatarColor } from '../components/Avatar.jsx';
 import { FormField } from '../components/FormField.jsx';
 import { ErrorMessage, SuccessMessage } from '../components/Feedback.jsx';
 
@@ -17,6 +19,34 @@ function FormFooter({ children, note }) {
     <div className="flex flex-col-reverse gap-3 rounded-b-xl border-t border-line bg-sunken px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-xs text-muted">{note}</p>
       <div className="flex justify-end">{children}</div>
+    </div>
+  );
+}
+
+// Your own open work, from the same counts Mission Control uses.
+function WorkStrip() {
+  const { data } = useApi('/dashboard/summary');
+  if (!data) return null;
+  const { assignedTasks, inProgressTasks, overdueTasks, pendingRequests } = data.counts;
+  const items = [
+    ['Open tasks', assignedTasks, '/tasks', 'text-ink'],
+    ['In progress', inProgressTasks, '/tasks?status=IN_PROGRESS', 'text-accent'],
+    ['Late', overdueTasks, '/tasks', overdueTasks ? 'text-bad' : 'text-ink'],
+    ['Requests pending', pendingRequests, '/requests?status=PENDING', 'text-warn'],
+  ];
+  return (
+    <div className="border-t border-line px-4 py-3">
+      <p className="eyebrow mb-2">Your work</p>
+      <ul className="grid grid-cols-2 gap-2">
+        {items.map(([label, value, to, tone]) => (
+          <li key={label}>
+            <Link to={to} className="block rounded-lg bg-sunken px-3 py-2 transition-colors hover:bg-hover">
+              <span className={`block font-display text-xl leading-none font-bold tabular-nums ${tone}`}>{value}</span>
+              <span className="mt-1 block text-[11px] text-faint">{label}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -32,7 +62,12 @@ function IdentityCard() {
 
   return (
     <Card className="overflow-hidden">
-      <div className="h-16 bg-gradient-to-r from-accent-strong/90 to-accent" aria-hidden="true" />
+      {/* A short line ending at your own stop, in your avatar colour. */}
+      <svg viewBox="0 0 320 64" preserveAspectRatio="none" className="block h-16 w-full" aria-hidden="true">
+        <rect width="320" height="64" fill="var(--fo-sunken)" />
+        <path d="M110 40H120C150 40 150 20 180 20H320" stroke="var(--fo-line-strong)" strokeWidth="4" strokeDasharray="2 9" strokeLinecap="round" fill="none" vectorEffect="non-scaling-stroke" />
+        <path d="M0 40H110" stroke={avatarColor(user.name)} strokeWidth="4" strokeLinecap="round" fill="none" vectorEffect="non-scaling-stroke" />
+      </svg>
       <div className="-mt-8 px-4 pb-4">
         <span className="inline-block rounded-full ring-4 ring-surface">
           <Avatar name={user.name} size="lg" />
@@ -43,6 +78,7 @@ function IdentityCard() {
           <Badge value={user.role} />
         </div>
       </div>
+      <WorkStrip />
       <dl className="divide-y divide-line-soft border-t border-line">
         {rows.map(([Icon, label, value]) => (
           <div key={label} className="flex items-center gap-3 px-4 py-2.5 text-sm">

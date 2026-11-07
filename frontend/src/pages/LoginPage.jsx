@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { getErrorMessage } from '../services/api.js';
 import Button from '../components/Button.jsx';
 import LogoMark from '../components/shell/LogoMark.jsx';
+import LoginGraphic from '../components/shell/LoginGraphic.jsx';
 import { FormField } from '../components/FormField.jsx';
 import { ErrorMessage } from '../components/Feedback.jsx';
 
@@ -76,15 +77,7 @@ export default function LoginPage() {
           <Logo />
         </div>
         <div className="relative max-w-md">
-          <svg viewBox="0 0 360 96" fill="none" className="mb-8 w-full max-w-sm" aria-hidden="true">
-            <path d="M8 72H112C136 72 136 28 160 28H248" stroke="#45d6b0" strokeWidth="5" strokeLinecap="round" fill="none" />
-            <path d="M248 28H352" stroke="#9d8cff" strokeWidth="5" strokeLinecap="round" fill="none" />
-            <path d="M160 28C184 28 184 80 208 80H264" stroke="#2b3047" strokeWidth="5" strokeLinecap="round" strokeDasharray="2 10" fill="none" />
-            <circle cx="8" cy="72" r="7" fill="#11141f" stroke="#45d6b0" strokeWidth="4" />
-            <circle cx="112" cy="72" r="7" fill="#11141f" stroke="#45d6b0" strokeWidth="4" />
-            <circle cx="248" cy="28" r="9" fill="#11141f" stroke="#9d8cff" strokeWidth="4" />
-            <circle cx="352" cy="28" r="7" fill="#11141f" stroke="#2b3047" strokeWidth="4" />
-          </svg>
+          <LoginGraphic />
           <h2 className="text-4xl leading-[1.05] font-extrabold tracking-tight">Everyday operations, in one place.</h2>
           <p className="mt-4 text-muted">FlowOps brings tasks, requests, and approvals together so teams spend less time chasing updates.</p>
           <ul className="mt-8 space-y-5">
