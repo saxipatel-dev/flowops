@@ -1,6 +1,6 @@
-export default function Tabs({ tabs, active, onChange }) {
+export default function Tabs({ tabs, active, onChange, className = 'border-b border-line' }) {
   return (
-    <div className="flex gap-1 border-b border-line px-3" role="tablist">
+    <div className={`flex gap-1 px-3 ${className}`} role="tablist">
       {tabs.map((tab) => {
         const selected = active === tab.value;
         return (

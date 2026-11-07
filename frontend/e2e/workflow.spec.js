@@ -72,7 +72,11 @@ test('request is submitted, approved, and its follow-up task is completed', asyn
   await expect(page.getByText('Your request "Ergonomic keyboard" was approved')).toBeVisible();
 
   await page.getByRole('link', { name: 'Tasks', exact: true }).click();
+  // On the board a task opens in a side panel first; the full page is one click away.
   await page.getByRole('link', { name: 'Fulfil request: Ergonomic keyboard' }).click();
+  const panel = page.getByRole('dialog', { name: 'Fulfil request: Ergonomic keyboard' });
+  await expect(panel).toBeVisible();
+  await panel.getByRole('link', { name: 'Open full page' }).click();
   await page.getByLabel('Update status').selectOption('COMPLETED');
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByText('Status updated to Completed.')).toBeVisible();
@@ -165,4 +169,85 @@ test('mission control moves a task from the week map', async ({ page }) => {
   await page.getByRole('link', { name: 'Open task' }).click();
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
   await expect(page.getByText('In Progress').first()).toBeVisible();
+});
+
+test('task board: drag with the mouse or keyboard, and a refused move snaps back', async ({ page }) => {
+  await login(page, 'maya@flowops.test');
+  await page.getByRole('link', { name: 'Tasks', exact: true }).click();
+  const column = (name) => page.locator('section').filter({ has: page.getByRole('heading', { name: new RegExp(`^${name}`) }) });
+  const todo = column('To Do');
+  const inProgress = column('In Progress');
+  await expect(todo.getByRole('button', { name: /^Drag “/ }).first()).toBeVisible();
+
+  // Mouse: drag the first movable card into In Progress.
+  const handle = todo.getByRole('button', { name: /^Drag “/ }).first();
+  const title = (await handle.getAttribute('aria-label')).slice(6, -1);
+  const from = await handle.boundingBox();
+  const to = await inProgress.boundingBox();
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(from.x + 40, from.y + 10, { steps: 5 });
+  await page.mouse.move(to.x + to.width / 2, to.y + 80, { steps: 12 });
+  await page.mouse.up();
+  await expect(page.getByText(`Moved “${title}” to In Progress.`)).toBeVisible();
+  await expect(inProgress.getByRole('link', { name: title })).toBeVisible();
+
+  // Refused by the server: the card snaps back and the reason is shown.
+  await page.route('**/api/tasks/*', (route) =>
+    route.request().method() === 'PATCH'
+      ? route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ error: 'You can only update the status of tasks assigned to you.' }) })
+      : route.continue(),
+  );
+  const back = inProgress.getByRole('button', { name: `Drag “${title}”` });
+  const backFrom = await back.boundingBox();
+  const target = await column('Completed').boundingBox();
+  await page.mouse.move(backFrom.x + backFrom.width / 2, backFrom.y + backFrom.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(backFrom.x + 40, backFrom.y + 10, { steps: 5 });
+  await page.mouse.move(target.x + target.width / 2, target.y + 80, { steps: 12 });
+  await page.mouse.up();
+  await expect(page.getByText('You can only update the status of tasks assigned to you.')).toBeVisible();
+  await expect(inProgress.getByRole('link', { name: title })).toBeVisible();
+  await page.unroute('**/api/tasks/*');
+
+  // Keyboard: Space picks the card up, the right arrow moves it a column, Space drops it.
+  await inProgress.getByRole('button', { name: `Drag “${title}”` }).focus();
+  // Each step is announced to screen readers; wait for it like a person would.
+  await page.keyboard.press('Space');
+  await expect(page.getByText('Over In Progress.')).toBeAttached();
+  // dnd-kit starts listening for arrow keys a moment after the pick-up; a person never types faster.
+  await page.waitForTimeout(150);
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByText('Over Completed.')).toBeAttached();
+  await page.keyboard.press('Space');
+  await expect(page.getByText(`Moved “${title}” to Completed.`)).toBeVisible();
+  await expect(column('Completed').getByRole('link', { name: title })).toBeVisible();
+
+  // The board's choice is saved: the list view agrees after a reload.
+  await page.getByRole('button', { name: 'List' }).click();
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'List' })).toHaveAttribute('aria-pressed', 'true');
+  const row = page.getByRole('row', { name: new RegExp(title) });
+  await expect(row.getByText('Completed')).toBeVisible();
+});
+
+test('task panel opens from the timeline, survives a reload, and Back closes it', async ({ page }) => {
+  await login(page, 'maya@flowops.test');
+  await page.goto('/tasks?view=timeline&range=month');
+  const link = page.getByRole('list', { name: 'Tasks by due date' }).getByRole('link').first();
+  const title = await link.innerText();
+  await link.click();
+  await expect(page.getByRole('dialog', { name: title })).toBeVisible();
+  await expect(page).toHaveURL(/task=\d+/);
+  await page.reload();
+  await expect(page.getByRole('dialog', { name: title })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Timeline' })).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page).not.toHaveURL(/task=/);
+
+  await link.click();
+  await expect(page.getByRole('dialog', { name: title })).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
 });

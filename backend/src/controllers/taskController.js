@@ -2,14 +2,16 @@ import { z } from 'zod';
 import prisma from '../utils/prisma.js';
 import { badRequest, forbidden, notFound } from '../utils/httpError.js';
 import { userSummary } from '../utils/selects.js';
-import { getPage, PAGE_SIZE } from '../utils/pagination.js';
+import { getPage } from '../utils/pagination.js';
 import { parseId } from '../utils/parseId.js';
 import { localToday } from '../utils/dates.js';
 import { taskStatusLabels } from '../utils/labels.js';
-import { canViewTask, canManageTask, canAssignTo, getVisibleTaskFilter } from '../services/accessService.js';
+import { canViewTask, canManageTask, canAssignTo, getStatusPermissionCheck, getVisibleTaskFilter } from '../services/accessService.js';
 import { logActivity, notify } from '../services/activityService.js';
 
 const statuses = ['TODO', 'IN_PROGRESS', 'COMPLETED'];
+// The board and timeline load every visible task at once, up to this many.
+const MAX_TASK_PAGE_SIZE = 200;
 const priorities = ['LOW', 'MEDIUM', 'HIGH'];
 
 // Accepts "YYYY-MM-DD", or an empty value to clear the date.
@@ -62,8 +64,8 @@ export async function listTasks(req, res) {
     where.AND.push({ title: { contains: search.trim(), mode: 'insensitive' } });
   }
 
-  const { page, skip, take } = getPage(req.query);
-  const [tasks, total] = await Promise.all([
+  const { page, skip, take, pageSize } = getPage(req.query, MAX_TASK_PAGE_SIZE);
+  const [tasks, total, canUpdateStatus] = await Promise.all([
     prisma.task.findMany({
       where,
       include: taskListInclude,
@@ -72,9 +74,11 @@ export async function listTasks(req, res) {
       take,
     }),
     prisma.task.count({ where }),
+    getStatusPermissionCheck(req.user),
   ]);
 
-  res.json({ tasks, total, page, pageSize: PAGE_SIZE });
+  // Lets the board show which cards can move; PATCH /tasks/:id still checks for itself.
+  res.json({ tasks: tasks.map((task) => ({ ...task, canUpdateStatus: canUpdateStatus(task) })), total, page, pageSize });
 }
 
 export async function getTask(req, res) {

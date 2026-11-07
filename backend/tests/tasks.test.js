@@ -178,6 +178,41 @@ describe('tasks', () => {
     expect(east.body.error).toBe('Due date cannot be in the past.');
   });
 
+  describe('larger pages and status permissions for the board', () => {
+    it('keeps 10 per page by default and allows up to 200 on request', async () => {
+      const admin = await loginAs('admin@flowops.test');
+      const total = await prisma.task.count();
+      const standard = await admin.get('/api/tasks?scope=all');
+      expect(standard.body.pageSize).toBe(10);
+      expect(standard.body.tasks).toHaveLength(Math.min(10, total));
+
+      const large = await admin.get('/api/tasks?scope=all&pageSize=50');
+      expect(large.body.pageSize).toBe(50);
+      expect(large.body.tasks).toHaveLength(Math.min(50, total));
+
+      expect((await admin.get('/api/tasks?scope=all&pageSize=5000')).body.pageSize).toBe(200);
+      expect((await admin.get('/api/tasks?scope=all&pageSize=abc')).body.pageSize).toBe(10);
+    });
+
+    it('ignores pageSize on other lists', async () => {
+      const admin = await loginAs('admin@flowops.test');
+      expect((await admin.get('/api/requests?scope=team&pageSize=50')).body.pageSize).toBe(10);
+      expect((await admin.get('/api/activity?pageSize=50')).body.pageSize).toBe(10);
+    });
+
+    it('marks each listed task the same way the detail endpoint does', async () => {
+      for (const email of ['maya@flowops.test', 'priya@flowops.test', 'admin@flowops.test']) {
+        const agent = await loginAs(email);
+        const { body } = await agent.get('/api/tasks?scope=all&pageSize=200');
+        expect(body.tasks.length).toBeGreaterThan(0);
+        for (const task of body.tasks) {
+          const detail = await agent.get(`/api/tasks/${task.id}`);
+          expect(task.canUpdateStatus).toBe(detail.body.permissions.canUpdateStatus);
+        }
+      }
+    });
+  });
+
   describe('completion time', () => {
     async function mayaTodoTask() {
       const maya = await findUser('maya@flowops.test');
