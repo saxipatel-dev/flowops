@@ -180,6 +180,21 @@ test('mission control moves a task from the week map', async ({ page }) => {
   await expect(page.getByText('In Progress').first()).toBeVisible();
 });
 
+// Drags a card by its handle into a column. Right after a drop, a floating copy of the
+// card (without a handle) animates onto the card's new place and covers the handle, so
+// wait until that copy has gone and only the card itself is left.
+async function dragByHandle(page, handle, column) {
+  const title = (await handle.getAttribute('aria-label')).slice(6, -1);
+  await expect(page.locator('article').filter({ has: page.getByRole('link', { name: title, exact: true }) })).toHaveCount(1);
+  const from = await handle.boundingBox();
+  const to = await column.boundingBox();
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(from.x + 40, from.y + 10, { steps: 5 });
+  await page.mouse.move(to.x + to.width / 2, to.y + 80, { steps: 12 });
+  await page.mouse.up();
+}
+
 test('task board: drag with the mouse or keyboard, and a refused move snaps back', async ({ page }) => {
   await login(page, 'maya@flowops.test');
   await page.getByRole('link', { name: 'Tasks', exact: true }).click();
@@ -191,13 +206,7 @@ test('task board: drag with the mouse or keyboard, and a refused move snaps back
   // Mouse: drag the first movable card into In Progress.
   const handle = todo.getByRole('button', { name: /^Drag “/ }).first();
   const title = (await handle.getAttribute('aria-label')).slice(6, -1);
-  const from = await handle.boundingBox();
-  const to = await inProgress.boundingBox();
-  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(from.x + 40, from.y + 10, { steps: 5 });
-  await page.mouse.move(to.x + to.width / 2, to.y + 80, { steps: 12 });
-  await page.mouse.up();
+  await dragByHandle(page, handle, inProgress);
   await expect(page.getByText(`Moved “${title}” to In Progress.`)).toBeVisible();
   await expect(inProgress.getByRole('link', { name: title })).toBeVisible();
 
@@ -207,14 +216,7 @@ test('task board: drag with the mouse or keyboard, and a refused move snaps back
       ? route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ error: 'You can only update the status of tasks assigned to you.' }) })
       : route.continue(),
   );
-  const back = inProgress.getByRole('button', { name: `Drag “${title}”` });
-  const backFrom = await back.boundingBox();
-  const target = await column('Completed').boundingBox();
-  await page.mouse.move(backFrom.x + backFrom.width / 2, backFrom.y + backFrom.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(backFrom.x + 40, backFrom.y + 10, { steps: 5 });
-  await page.mouse.move(target.x + target.width / 2, target.y + 80, { steps: 12 });
-  await page.mouse.up();
+  await dragByHandle(page, inProgress.getByRole('button', { name: `Drag “${title}”` }), column('Completed'));
   await expect(page.getByText('You can only update the status of tasks assigned to you.')).toBeVisible();
   await expect(inProgress.getByRole('link', { name: title })).toBeVisible();
   await page.unroute('**/api/tasks/*');
