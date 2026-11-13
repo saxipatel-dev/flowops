@@ -88,6 +88,11 @@ test('reduced motion turns animation off', async ({ page }) => {
 
 test('keyboard users can skip straight to the page content', async ({ page }) => {
   await login(page, 'maya@flowops.test');
+  // The URL changes before the dashboard finishes rendering; on a slow CI runner an
+  // early Tab lands on the page before the skip link exists. Start from a settled page.
+  await page.waitForLoadState('networkidle');
+  await expect(page.locator('#main-content')).toBeVisible();
+  await page.evaluate(() => document.activeElement?.blur());
   await page.keyboard.press('Tab');
   const skip = page.getByRole('link', { name: 'Skip to content' });
   await expect(skip).toBeFocused();
