@@ -6,7 +6,7 @@ FlowOps is a full-stack web app for the everyday work inside a small company. Em
 
 [![CI](https://github.com/saxipatel-dev/flowops/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/saxipatel-dev/flowops/actions/workflows/ci.yml) ![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white) ![Express 5](https://img.shields.io/badge/Express-5-444?logo=express&logoColor=white) ![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white) ![Prisma 6](https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma&logoColor=white) ![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-38BDF8?logo=tailwindcss&logoColor=white) ![MIT License](https://img.shields.io/badge/license-MIT-blue)
 
-[Walkthrough](#walkthrough) · [Features](#features) · [How it works](#how-it-works) · [Running it locally](#running-it-locally) · [Tests](#tests) · [Limitations](#known-limitations)
+**[Try the live demo →](https://flowops-demo-2vo1.onrender.com)** · [Walkthrough](#walkthrough) · [Features](#features) · [How it works](#how-it-works) · [Running it locally](#running-it-locally) · [Tests](#tests) · [Limitations](#known-limitations)
 
 ![Mission Control, the FlowOps dashboard](screenshots/mission-control.png)
 
@@ -150,6 +150,15 @@ As an example, here's what happens when a manager approves a request:
 - Automated accessibility checks found real problems I had missed, mostly controls whose accessible name didn't match the visible text.
 - Testing flows that involve several users (an employee submits, a manager approves) needed an isolated, re-seeded test database so the tests never touch development data.
 
+## Live demo
+
+**https://flowops-demo-2vo1.onrender.com**: sign in with one click as Maya (employee), Daniel (manager) or Grace (admin).
+
+- It runs on Render's free plan with a Neon PostgreSQL database. The free plan sleeps after about 15 minutes without visitors, so the first page can take 30 to 60 seconds to load.
+- All data is fictional and resets to fresh demo data every time the server starts.
+- Changing passwords, editing profiles and creating or deactivating users are turned off in the demo, so visitors can't lock each other out of the shared accounts.
+- One Render service runs the Express API and serves the built React app, so the site and its session cookie share one origin. The setup is in [`render.yaml`](render.yaml).
+
 ## Running it locally
 
 You'll need Node.js 22 (the version I develop and run CI with), npm, and Docker.
@@ -263,7 +272,7 @@ screenshots/           README images
 - There's no password reset by email. An admin creates accounts with a temporary password.
 - The board and timeline load up to 200 tasks at a time and ask you to narrow the filters beyond that.
 - Tasks completed before completion times were tracked show "time not recorded", and FlowOps doesn't record when a review started, only how long a request waited.
-- It's a portfolio project and hasn't been deployed or used in production.
+- It's a portfolio project. The public demo is the only deployment, and it hasn't been used in production.
 
 ## License
 
