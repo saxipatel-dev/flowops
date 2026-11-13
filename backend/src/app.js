@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import session from 'express-session';
 import connectPgSimple from 'connect-pg-simple';
@@ -17,6 +20,7 @@ import dashboardRoutes from './routes/dashboardRoutes.js';
 import { readUtcOffset } from './middleware/timezone.js';
 
 const PgSession = connectPgSimple(session);
+const frontendDist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../frontend/dist');
 
 export function createApp() {
   if (!process.env.SESSION_SECRET) {
@@ -60,6 +64,13 @@ export function createApp() {
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/activity', activityRoutes);
   app.use('/api/dashboard', dashboardRoutes);
+
+  // In production the API also serves the built React app, so the site and its
+  // session cookie share one origin. Unknown non-API paths fall back to the app's router.
+  if (isProduction && fs.existsSync(frontendDist)) {
+    app.use(express.static(frontendDist, { index: false, maxAge: '1h' }));
+    app.get(/^(?!\/api(\/|$)).*/, (req, res) => res.sendFile(path.join(frontendDist, 'index.html')));
+  }
 
   app.use(notFoundHandler);
   app.use(errorHandler);

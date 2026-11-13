@@ -1,0 +1,24 @@
+# Render Blueprint for the public FlowOps demo: one free web service that runs the
+# Express API and serves the built React app. The database is an external PostgreSQL
+# (for example Neon); paste its connection string as DATABASE_URL when Render asks.
+services:
+  - type: web
+    name: flowops-demo
+    runtime: node
+    plan: free
+    buildCommand: npm run render-build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: DEMO_MODE
+        value: "true"
+      - key: VITE_DEMO_MODE
+        value: "true"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false

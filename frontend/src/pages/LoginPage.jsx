@@ -17,6 +17,15 @@ export function validateLogin({ email, password }) {
   return errors;
 }
 
+// The public demo build shows one-click sign-in for the seeded accounts.
+const isDemo = import.meta.env.VITE_DEMO_MODE === 'true';
+const DEMO_PASSWORD = 'Password123!';
+const demoAccounts = [
+  ['Employee', 'Maya Chen', 'maya@flowops.test'],
+  ['Manager', 'Daniel Reyes', 'daniel@flowops.test'],
+  ['Admin', 'Grace Thompson', 'admin@flowops.test'],
+];
+
 const highlights = [
   [ListChecks, 'Tasks and deadlines', 'Assign work, track progress, and see what is due next.'],
   [ClipboardCheck, 'Request approvals', 'Submit equipment, purchase, and IT requests for manager review.'],
@@ -48,22 +57,25 @@ export default function LoginPage() {
     setFieldErrors({ ...fieldErrors, [event.target.name]: '' });
   }
 
-  async function handleSubmit(event) {
-    event.preventDefault();
-    const errors = validateLogin(form);
-    setFieldErrors(errors);
-    setError('');
-    if (Object.keys(errors).length > 0) return;
-
+  async function signIn(email, password) {
     setSubmitting(true);
     try {
-      await login(form.email.trim(), form.password);
+      await login(email, password);
       navigate(location.state?.from || '/dashboard', { replace: true });
     } catch (err) {
       setError(getErrorMessage(err, 'Login failed.'));
     } finally {
       setSubmitting(false);
     }
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    const errors = validateLogin(form);
+    setFieldErrors(errors);
+    setError('');
+    if (Object.keys(errors).length > 0) return;
+    await signIn(form.email.trim(), form.password);
   }
 
   return (
@@ -134,7 +146,33 @@ export default function LoginPage() {
               Sign in
             </Button>
           </form>
-          <p className="mt-6 text-xs text-muted">Can't sign in? Contact your FlowOps administrator.</p>
+          {isDemo ? (
+            <section className="mt-8 rounded-lg border border-line bg-surface p-4" aria-labelledby="demo-heading">
+              <h2 id="demo-heading" className="text-sm font-semibold text-ink">Try the live demo</h2>
+              <p className="mt-1 text-xs text-muted">
+                Sign in as one of the sample people. All data is fictional and resets when the demo restarts.
+              </p>
+              <div className="mt-3 grid gap-2">
+                {demoAccounts.map(([role, name, email]) => (
+                  <Button
+                    key={email}
+                    type="button"
+                    variant="secondary"
+                    className="h-10 w-full"
+                    disabled={submitting}
+                    onClick={() => signIn(email, DEMO_PASSWORD)}
+                  >
+                    <span className="flex w-full items-center justify-between">
+                      <span>{name}</span>
+                      <span className="text-xs text-muted">{role}</span>
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            </section>
+          ) : (
+            <p className="mt-6 text-xs text-muted">Can't sign in? Contact your FlowOps administrator.</p>
+          )}
         </div>
       </main>
     </div>

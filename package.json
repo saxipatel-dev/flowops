@@ -1,0 +1,12 @@
+{
+  "name": "flowops",
+  "private": true,
+  "description": "Build and start scripts for running the API and the React app as one service (used by the Render deploy).",
+  "scripts": {
+    "render-build": "npm ci --include=dev --prefix backend && npm ci --include=dev --prefix frontend && npm run build --prefix frontend && cd backend && npx prisma generate && npx prisma migrate deploy",
+    "start": "node backend/src/server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
