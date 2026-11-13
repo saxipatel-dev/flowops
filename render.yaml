@@ -6,6 +6,7 @@ services:
     name: flowops-demo
     runtime: node
     plan: free
+    region: ohio  # same AWS region as the Neon database (US East 2)
     buildCommand: npm run render-build
     startCommand: npm start
     healthCheckPath: /api/health
